@@ -1,0 +1,11 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "esnext",
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*"
+    ],
+
+}
