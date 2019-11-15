@@ -4,7 +4,7 @@ import "./bootstrap";
 
 export default class AF {
 
-    public readonly e = ""; //epselon
+    public static readonly e = ""; //epselon
     protected readonly transitions: Array<transition>;
     protected readonly alphabet: Set<string>;
     protected readonly states: Set<any>;
@@ -79,8 +79,7 @@ export default class AF {
     }
 
     public recognize(word: string): Boolean {
-        return this.reset()
-            .analyze(this.slice(word))
+        return [... new Set(this.reset().analyze(this.slice(word)))]
             .filter(el => this.finalStates.contains(el))
             .length > 0;
     }
@@ -100,14 +99,50 @@ export default class AF {
         }).length > 0).length == 0 && this.transitions.filter(el => el[1] == '').length == 0;
     }
 
-    // test function to check completeness
-    // test function to check determinism
+    public toString(notation = "{,}", propsnotation = ',', enclose = ',') {
+        let encloseA = enclose.split(",");
+        encloseA[1] = encloseA[1] || encloseA[0];
+        let propsnotationA = propsnotation.split(",");
+        propsnotationA[1] = propsnotationA[1] || propsnotationA[0];
+        return `
+            ${encloseA[0]}
+                ${propsnotationA[0]}states${propsnotationA[1]} :  ${this.states.toString(notation, propsnotation)}, 
+                ${propsnotationA[0]}initialState${propsnotationA[1]} : ${typeof this.initialState == "object" ? this.initialState.toString(notation, propsnotation) : this.initialState},
+                ${propsnotationA[0]}currentState${propsnotationA[1]} : ${typeof this.currentState == "object" ? this.currentState.toString(notation, propsnotation) : this.currentState},
+                ${propsnotationA[0]}finalStates${propsnotationA[1]} : ${this.finalStates.toString(notation, propsnotation)} ,  
+                ${propsnotationA[0]}alphabet${propsnotationA[1]} : ${this.alphabet.toString(notation, propsnotation)}, 
+                ${propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}   
+            ${encloseA[1]}
+        `;
+    }
+
+    public toJson() {
+        return this.toString("[,]", '","', "{,}");
+    }
+
+    // static make : return new automaton from json string : recursively ( to any depth ) convert each array to set, except transitions array itself (but not whats in it)
+    // is e-AFN function
+    // renameStates([new names]) : AF
+    // to string 
+    // to json : not working, cannot be parsed
+    // rename states
+    // from dtring 
+    // e-AFN mixin
     // use interfaces & mixins instead of classes or both
     // complete interface : only available for non-complete automatas
     // non-deterministic interface : determinize method that will complete if necccessary and determinize
     // deterministic interface: non-determinize method that will complete if necccessary and non-determinize
-    // be able to produce all automatas AF, AFD, AFC, AFN, AFNC, AFDC
+    // be able to produce all automatas AF, AFD, AFC, AFN, AFNC, AFDC, e-AFN
     // functionalities : complete, determinize, un-determinize, uncomplete
+    // to regexp, from regexp
+    // use jsdoc to generate documentation
+    // D : unique transitions for each state ans symbol and no epselon transion 
+    // C: transition function is total ie all possible transitions are defined
+    // e- : has epselon transition(s)
+    // N : is not deterministic
+    // etats accessibles, co-accessibles, utiles, emondés
+
+
 
 }
 

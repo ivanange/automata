@@ -2,7 +2,6 @@ import "./bootstrap";
 // node -r esm dist/AF.js
 export default class AF {
     constructor(Q, Qi, F, E, S) {
-        this.e = ""; //epselon
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
         let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1); // verifie que aucun symbol n'est contenu dans un autres
@@ -55,8 +54,7 @@ export default class AF {
         return sliced.filter(el => el.length > 0); // remove empty symbols from word
     }
     recognize(word) {
-        return this.reset()
-            .analyze(this.slice(word))
+        return [...new Set(this.reset().analyze(this.slice(word)))]
             .filter(el => this.finalStates.contains(el))
             .length > 0;
     }
@@ -71,4 +69,24 @@ export default class AF {
             return this.transiter(s).length > 1;
         }).length > 0).length == 0 && this.transitions.filter(el => el[1] == '').length == 0;
     }
+    toString(notation = "{,}", propsnotation = ',', enclose = ',') {
+        let encloseA = enclose.split(",");
+        encloseA[1] = encloseA[1] || encloseA[0];
+        let propsnotationA = propsnotation.split(",");
+        propsnotationA[1] = propsnotationA[1] || propsnotationA[0];
+        return `
+            ${encloseA[0]}
+                ${propsnotationA[0]}states${propsnotationA[1]} :  ${this.states.toString(notation, propsnotation)}, 
+                ${propsnotationA[0]}initialState${propsnotationA[1]} : ${typeof this.initialState == "object" ? this.initialState.toString(notation, propsnotation) : this.initialState},
+                ${propsnotationA[0]}currentState${propsnotationA[1]} : ${typeof this.currentState == "object" ? this.currentState.toString(notation, propsnotation) : this.currentState},
+                ${propsnotationA[0]}finalStates${propsnotationA[1]} : ${this.finalStates.toString(notation, propsnotation)} ,  
+                ${propsnotationA[0]}alphabet${propsnotationA[1]} : ${this.alphabet.toString(notation, propsnotation)}, 
+                ${propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}   
+            ${encloseA[1]}
+        `;
+    }
+    toJson() {
+        return this.toString("[,]", '","', "{,}");
+    }
 }
+AF.e = ""; //epselon

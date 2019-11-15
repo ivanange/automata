@@ -32,7 +32,11 @@ try {
         //B.recognize(s),
         B.isDeterministic(),
         B.isComplete(),
+        B.toString(),
+        B.toJson()
     );
+
+
 }
 catch (e) {
     console.log(e);
