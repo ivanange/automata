@@ -1,12 +1,12 @@
-import { NC, ND } from "./mixins";
+import AF from "./AF";
 
-let A = new NC(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
+let A = new AF(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
     [1, "a", 1], [1, "a", 2], [2, "b", 3], [2, "a", 4], [3, "b", 3], [3, "b", 4]
 ]);
 
 let B = A.complete();
 
-let C = new ND(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
+let C = new AF(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
     [1, "a", 2], [1, "a", 3], [2, "a", 4], [3, "a", 3], [3, "b", 4], [4, "b", 2]
 ]);
 

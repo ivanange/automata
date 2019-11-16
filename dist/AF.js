@@ -5,11 +5,17 @@ export default class AF {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
         let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1); // verifie que aucun symbol n'est contenu dans un autres
-        if (Q.contains(Qi)
-            && Q.isSubset(F)
-            && E.isSubset(new Set(S.filter(e => e[1] != "").map(el => el[1])))
-            && Q.isSubset(new Set([].concat(...S.map(el => [el[0], el[2]]))))
-            && invalidSet.length == 0) {
+        if (!Q.contains(Qi))
+            throw "Initial state not element of Q (set of all states)";
+        else if (!Q.isSubset(F))
+            throw "Final states not subset of Q (set of all states)";
+        else if (!E.isSubset(new Set(S.filter(e => e[1] != "").map(el => el[1]))))
+            throw "A Symbol used in a transition does not exist in Sigma(alphabet)";
+        else if (!Q.isSubset(new Set([].concat(...S.map(el => [el[0], el[2]])))))
+            throw "A state used in a transition does not exist in Q (set of all states)";
+        else if (invalidSet.length > 0)
+            throw "Invalid alphabet ( ambiguous )  symbols contained in other symbols : ${String(invalidSet || '')}";
+        else {
             this.states = Q;
             this.initialState = Qi;
             this.finalStates = F;
@@ -17,34 +23,50 @@ export default class AF {
             this.transitions = S;
             this.currentState = this.initialState;
         }
-        else {
-            throw `Properties specified are invalid ,  possible Errors :
-                    - Invalid alphabet ( ambiguous )  symbols contained in other symbols : ${String(invalidSet || '')}
-                    - Initial state not element of Sigma(alphabet)
-                    - Final states not subset of Q (set of all states)
-                    - A state used in a transition does not exist in Q (set of all states)
-                    - Symbol used in a transition does not exist in Sigma(alphabet)
-                `;
-        }
     }
-    transiter(symbol) {
-        return this.transitions
-            .filter(el => el[0] === this.currentState && el[1] === symbol)
-            .map(el => el[2]);
+    optimize(array) {
+        let set = new Set();
+        return [...set.pushArray(array)];
+    }
+    transiter(symbol, state) {
+        this.currentState = state || this.currentState;
+        return this.optimize(this.transitions
+            .filter(el => el[0] + "" === this.currentState + "" && el[1] === symbol)
+            .map(el => el[2]));
+    }
+    transiterArray(symbol, state) {
+        return this.optimize([].concat(...state.map(el => this.transiter(symbol, el))));
+    }
+    eSingleFermeture(e) {
+        this.currentState = e;
+        let s = this.transiter(AF.e);
+        return this.optimize([].concat([e], ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])));
+    }
+    eFermeture(es) {
+        return this.optimize([].concat(...es.map(el => this.eSingleFermeture(el))));
+    }
+    eTransiter(symbol, state) {
+        state = state || this.currentState;
+        return this.optimize(this.eFermeture(this.transiterArray(symbol, this.eSingleFermeture(state))));
     }
     reset() {
         this.currentState = this.initialState;
         return this;
     }
     analyze(word, currentState) {
+        this.hasETransitions = this.hasETransitions || this.isEAFN();
         this.currentState = currentState || this.currentState;
         let next = word.shift();
-        if (word.length == 0) {
-            return this.transiter(next);
+        if (this.hasETransitions) {
+            return word.length == 0 ?
+                this.eTransiter(next) :
+                [].concat(...this.eTransiter(next).map(el => this.analyze([...word], el)));
         }
         else {
-            return [].concat(...this.transiter(next)
-                .map(el => this.analyze([...word], el)));
+            return word.length == 0 ?
+                this.transiter(next) :
+                [].concat(...this.transiter(next)
+                    .map(el => this.analyze([...word], el)));
         }
     }
     slice(word) {
@@ -58,6 +80,9 @@ export default class AF {
             .filter(el => this.finalStates.contains(el))
             .length > 0;
     }
+    isEAFN() {
+        return this.transitions.filter(el => el[1] == '').length > 0;
+    }
     isComplete() {
         // check if each state has as many different transitions as there are symbols in the alphabet
         return [...this.states].filter(el => this.transitions.filter(e => e[0] == el).length < this.alphabet.size).length == 0;
@@ -67,7 +92,48 @@ export default class AF {
         return [...this.states].filter(el => [...this.alphabet].filter(s => {
             this.currentState = el;
             return this.transiter(s).length > 1;
-        }).length > 0).length == 0 && this.transitions.filter(el => el[1] == '').length == 0;
+        }).length > 0).length == 0 && !this.isEAFN();
+    }
+    complete(pullState) {
+        pullState = pullState || [...this.states].join(""); // creat pull state
+        let states = new Set([...this.states, pullState]);
+        let transitions = [];
+        this.states.forEach((s) => {
+            this.alphabet.forEach((el) => {
+                if (this.analyze([el], s).length == 0)
+                    transitions.push([s, el, pullState]);
+                transitions.push([pullState, el, pullState]);
+            });
+        });
+        transitions = [].concat(this.transitions, transitions);
+        // creer un état puis avecc toutes les transition sortantes qui revienent
+        // sur lui et les transition manquante qui vont sur lui 
+        return new AF(states, this.initialState, this.finalStates, this.alphabet, transitions);
+    }
+    determinise() {
+        // check algorithm in doc
+        // this.complete();
+        // foreach does not consider modifications on the iterated object
+        let initialState = new Set([this.initialState]);
+        let finalStates = new Set();
+        let transitions = [];
+        let states = new Set([initialState]);
+        for (let s of states) {
+            if ([...s].filter(el => this.finalStates.contains(el)).length > 0)
+                finalStates.push(s);
+            this.alphabet.forEach((el) => {
+                let state = [...s].map(e => this.analyze([el], e))
+                    .filter(a => a.length > 0)
+                    .reduce((acc, val) => {
+                    return acc = new Set([...acc, ...val]);
+                }, new Set());
+                if (state.size) {
+                    states.push(state);
+                    transitions.push([s, el, state]);
+                }
+            });
+        }
+        return new AF(states, initialState, finalStates, this.alphabet, transitions);
     }
     toString(notation = "{,}", propsnotation = ',', enclose = ',') {
         let encloseA = enclose.split(",");
@@ -84,6 +150,11 @@ export default class AF {
                 ${propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}   
             ${encloseA[1]}
         `;
+    }
+    unDeterminise() {
+        // create an epselon transition on a random state
+        // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
+        return;
     }
     toJson() {
         return this.toString("[,]", '","', "{,}");

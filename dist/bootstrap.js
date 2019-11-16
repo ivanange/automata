@@ -24,6 +24,12 @@ Set.prototype.push = function (val) {
     }
     return this;
 };
+Set.prototype.pushArray = function (array) {
+    for (let s of array) {
+        return this.push(s);
+    }
+    return this;
+};
 Set.prototype.isSubset = function (val) {
     let arr = [...val];
     return arr.filter(el => this.contains(el)).length === arr.length;

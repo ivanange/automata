@@ -6,6 +6,7 @@ declare interface Set<T> {
     push(val: any): Set<T>;
     isSubset(val: Set<T>): boolean;
     toString(notation?: string, wrapper?): string;
+    pushArray(array: Array<any>);
 }
 
 declare interface Array<T> {
@@ -44,6 +45,13 @@ Set.prototype.contains = function (val) {
 Set.prototype.push = function (val) {
     if (!this.contains(val)) {
         return this.add(val);
+    }
+    return this;
+}
+
+Set.prototype.pushArray = function (array) {
+    for (let s of array) {
+        return this.push(s);
     }
     return this;
 }
