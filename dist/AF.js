@@ -29,24 +29,23 @@ export default class AF {
         return [...set.pushArray(array)];
     }
     transiter(symbol, state) {
-        this.currentState = state || this.currentState;
+        this.currentState = typeof state !== "undefined" ? state : this.currentState;
         return this.optimize(this.transitions
             .filter(el => el[0] + "" === this.currentState + "" && el[1] === symbol)
             .map(el => el[2]));
     }
-    transiterArray(symbol, state) {
-        return this.optimize([].concat(...state.map(el => this.transiter(symbol, el))));
+    transiterArray(symbol, states) {
+        return this.optimize([].concat(...states.map(el => this.transiter(symbol, el))));
     }
-    eSingleFermeture(e) {
-        this.currentState = e;
-        let s = this.transiter(AF.e);
-        return this.optimize([].concat([e], ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])));
+    eSingleFermeture(state) {
+        let s = this.transiter(AF.e, state);
+        return this.optimize([].concat([state], ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])));
     }
     eFermeture(es) {
         return this.optimize([].concat(...es.map(el => this.eSingleFermeture(el))));
     }
     eTransiter(symbol, state) {
-        state = state || this.currentState;
+        state = typeof state !== "undefined" ? state : this.currentState;
         return this.optimize(this.eFermeture(this.transiterArray(symbol, this.eSingleFermeture(state))));
     }
     reset() {
@@ -54,20 +53,13 @@ export default class AF {
         return this;
     }
     analyze(word, currentState) {
-        this.hasETransitions = this.hasETransitions || this.isEAFN();
-        this.currentState = currentState || this.currentState;
+        this.hasETransitions = typeof this.hasETransitions !== "undefined" ? this.hasETransitions : this.isEAFN();
+        this.currentState = typeof currentState !== "undefined" ? currentState : this.currentState;
         let next = word.shift();
-        if (this.hasETransitions) {
-            return word.length == 0 ?
-                this.eTransiter(next) :
-                [].concat(...this.eTransiter(next).map(el => this.analyze([...word], el)));
-        }
-        else {
-            return word.length == 0 ?
-                this.transiter(next) :
-                [].concat(...this.transiter(next)
-                    .map(el => this.analyze([...word], el)));
-        }
+        let transitionFunction = this.hasETransitions ? "eTransiter" : "transiter";
+        return this.optimize(word.length == 0 ?
+            this[transitionFunction](next) :
+            [].concat(...this[transitionFunction](next).map(el => this.analyze([...word], el))));
     }
     slice(word) {
         // change visibility to protected
@@ -95,7 +87,7 @@ export default class AF {
         }).length > 0).length == 0 && !this.isEAFN();
     }
     complete(pullState) {
-        pullState = pullState || [...this.states].join(""); // creat pull state
+        pullState = typeof pullState !== "undefined" ? pullState : [...this.states].join(""); // creat pull state
         let states = new Set([...this.states, pullState]);
         let transitions = [];
         this.states.forEach((s) => {
@@ -135,6 +127,48 @@ export default class AF {
         }
         return new AF(states, initialState, finalStates, this.alphabet, transitions);
     }
+    unDeterminise(state) {
+        // create an epselon transition on a random state
+        // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
+        return this;
+    }
+    eAFNtoAFN() {
+        if (this.isEAFN()) {
+            let finalStates = new Set([...this.states]
+                .filter(el => this.finalStates.intersect(new Set(this.eSingleFermeture(el))).size > 0));
+            let transitions = [];
+            [...this.states].map(state => {
+                this.alphabet.forEach(el => {
+                    let targets = this.transiterArray(el, this.eSingleFermeture(state));
+                    if (targets.length) {
+                        targets.map(target => transitions.push([state, el, target]));
+                    }
+                });
+            });
+            return new AF(this.states, this.initialState, finalStates, this.alphabet, transitions);
+        }
+        else
+            return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+    }
+    toAFN(state) {
+        if (this.isDeterministic())
+            return this.unDeterminise(state);
+        else
+            return this.eAFNtoAFN();
+    }
+    toAFD() {
+        if (this.isDeterministic())
+            return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+        else
+            this.toAFN().determinise();
+    }
+    toEAFN(state) {
+        // add reflexive e-transition on a state
+        return this;
+    }
+    type() {
+        return `${this.isEAFN() ? "e-" : ""}AF${this.isDeterministic() ? "D" : "N" + this.isComplete() ? "C" : ""}`;
+    }
     toString(notation = "{,}", propsnotation = ',', enclose = ',') {
         let encloseA = enclose.split(",");
         encloseA[1] = encloseA[1] || encloseA[0];
@@ -150,11 +184,6 @@ export default class AF {
                 ${propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}   
             ${encloseA[1]}
         `;
-    }
-    unDeterminise() {
-        // create an epselon transition on a random state
-        // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
-        return;
     }
     toJson() {
         return this.toString("[,]", '","', "{,}");

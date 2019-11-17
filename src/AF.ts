@@ -10,7 +10,7 @@ export default class AF {
     protected readonly finalStates: Set<any>;
     protected readonly initialState: any;
     protected currentState: any;
-    protected hasETransitions;
+    protected hasETransitions: Boolean;
 
     public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>) {
         // check there are no duplicate transitions
@@ -33,13 +33,13 @@ export default class AF {
         }
     }
 
-    public optimize(array: Array<any>) {
+    public optimize(array: Array<any>): Array<any> {
         let set = new Set();
         return [...set.pushArray(array)];
     }
 
     public transiter(symbol: string, state?: any): Array<any> {
-        this.currentState = state || this.currentState;
+        this.currentState = typeof state !== "undefined" ? state : this.currentState;
         return this.optimize(
             this.transitions
                 .filter(el => el[0] + "" === this.currentState + "" && el[1] === symbol)
@@ -47,19 +47,19 @@ export default class AF {
         );
     }
 
-    public transiterArray(symbol: string, state: Array<any>): Array<any> {
+    public transiterArray(symbol: string, states: Array<any>): Array<any> {
 
         return this.optimize(
-            [].concat(...state.map(el => this.transiter(symbol, el)))
+            [].concat(...states.map(el => this.transiter(symbol, el)))
         );
     }
 
-    public eSingleFermeture(e: any): Array<any> {
-        this.currentState = e;
-        let s = this.transiter(AF.e);
+    public eSingleFermeture(state: any): Array<any> {
+        let s = this.transiter(AF.e, state);
+
         return this.optimize(
             [].concat(
-                [e],
+                [state],
                 ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])
             )
         );
@@ -72,7 +72,7 @@ export default class AF {
     }
 
     public eTransiter(symbol: string, state?: any): Array<any> {
-        state = state || this.currentState;
+        state = typeof state !== "undefined" ? state : this.currentState;
         return this.optimize(
             this.eFermeture(
                 this.transiterArray(symbol, this.eSingleFermeture(state))
@@ -86,29 +86,18 @@ export default class AF {
     }
 
     public analyze(word: Array<string>, currentState?): Array<any> {
-        this.hasETransitions = this.hasETransitions || this.isEAFN();
-        this.currentState = currentState || this.currentState;
+        this.hasETransitions = typeof this.hasETransitions !== "undefined" ? this.hasETransitions : this.isEAFN();
+        this.currentState = typeof currentState !== "undefined" ? currentState : this.currentState;
         let next = word.shift();
+        let transitionFunction = this.hasETransitions ? "eTransiter" : "transiter";
 
-        if (this.hasETransitions) {
-
-            return word.length == 0 ?
-                this.eTransiter(next) :
+        return this.optimize(
+            word.length == 0 ?
+                this[transitionFunction](next) :
                 [].concat(
-                    ...this.eTransiter(next).map(el => this.analyze([...word], el))
-                );
-        }
-
-        else {
-            return word.length == 0 ?
-                this.transiter(next) :
-                [].concat(
-                    ...this.transiter(next)
-                        .map(el => this.analyze([...word], el))
-                );
-
-        }
-
+                    ...this[transitionFunction](next).map(el => this.analyze([...word], el))
+                )
+        );
     }
 
     public slice(word: string): Array<string> {
@@ -147,7 +136,7 @@ export default class AF {
     }
 
     public complete(pullState?: any): AF {
-        pullState = pullState || [...this.states].join(""); // creat pull state
+        pullState = typeof pullState !== "undefined" ? pullState : [...this.states].join(""); // creat pull state
         let states: Set<any> = new Set([...this.states, pullState]);
         let transitions: Array<transition> = [];
         this.states.forEach((s) => {
@@ -189,7 +178,53 @@ export default class AF {
         return new AF(states, initialState, finalStates, this.alphabet, transitions);
     }
 
-    public toString(notation = "{,}", propsnotation = ',', enclose = ',') {
+    public unDeterminise(state?): AF {
+        // create an epselon transition on a random state
+        // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
+        return this;
+    }
+
+    public eAFNtoAFN(): AF {
+        if (this.isEAFN()) {
+            let finalStates: Set<any> = new Set(
+                [...this.states]
+                    .filter(el => this.finalStates.intersect(new Set(this.eSingleFermeture(el))).size > 0)
+            );
+            let transitions: Array<transition> = [];
+
+            [...this.states].map(state => {
+                this.alphabet.forEach(el => {
+                    let targets = this.transiterArray(el, this.eSingleFermeture(state));
+                    if (targets.length) {
+                        targets.map(target => transitions.push([state, el, target]));
+                    }
+                })
+            });
+
+            return new AF(this.states, this.initialState, finalStates, this.alphabet, transitions);
+        }
+        else return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+    }
+
+    public toAFN(state?): AF {
+        if (this.isDeterministic()) return this.unDeterminise(state);
+        else return this.eAFNtoAFN();
+    }
+
+    public toAFD(): AF {
+        if (this.isDeterministic()) return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+        else this.toAFN().determinise();
+    }
+    public toEAFN(state?): AF {
+        // add reflexive e-transition on a state
+        return this;
+    }
+
+    public type(): String {
+        return `${this.isEAFN() ? "e-" : ""}AF${this.isDeterministic() ? "D" : "N" + this.isComplete() ? "C" : ""}`;
+    }
+
+    public toString(notation = "{,}", propsnotation = ',', enclose = ','): String {
         let encloseA = enclose.split(",");
         encloseA[1] = encloseA[1] || encloseA[0];
         let propsnotationA = propsnotation.split(",");
@@ -206,35 +241,20 @@ export default class AF {
         `;
     }
 
-    public unDeterminise(): AF {
-        // create an epselon transition on a random state
-        // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
-        return;
-    }
 
-    public toJson() {
+
+    public toJson(): String {
         return this.toString("[,]", '","', "{,}");
     }
 
-
-
+    // to e-AFN
+    //  edit properties : create new automata to materailize changes intstead of 
     // static make : return new automaton from json string : recursively ( to any depth ) convert each array to set, except transitions array itself (but not whats in it)
     // renameStates([new names]) : AF
-    // from string 
-    // e-AFN mixin
-    // use interfaces & mixins instead of classes or both
-    // complete interface : only available for non-complete automatas
-    // non-deterministic interface : determinize method that will complete if necccessary and determinize
-    // deterministic interface: non-determinize method that will complete if necccessary and non-determinize
-    // be able to produce all automatas AF, AFD, AFC, AFN, AFNC, AFDC, e-AFN
-    // functionalities : complete, determinize, un-determinize, uncomplete
+    // determine automaton type: AF, AFD, AFC, AFN, AFNC, AFDC, e-AFN : (is eAFN ? e- : "" ) + AF + (isdeterministic ? D : N ) + (isComplete ? C : "")
+    // functionalities :  un-determinize
     // to regexp, from regexp
     // use jsdoc to generate documentation
-    // D : unique transitions for each state ans symbol and no epselon transition 
-    // C: transition function is total ie all possible transitions are defined
-    // e- : has epselon transition(s)
-    // N : is not deterministic
-    // etats accessibles, co-accessibles, utiles, emondés
 
 
 

@@ -9,6 +9,9 @@ function applyMixins(derivedCtor, baseCtors) {
 function isArrayEqual(array1, array2) {
     return array1.length === array2.length && array1.sort().join(',') === array2.sort().join(',');
 }
+Set.prototype.intersect = function (set) {
+    return new Set([...set].filter(el => this.contains(el)));
+};
 Set.prototype.contains = function (val) {
     if ((val) instanceof Set) {
         return [...(this)].filter((el) => el instanceof Set).find(function (el) {
@@ -26,7 +29,7 @@ Set.prototype.push = function (val) {
 };
 Set.prototype.pushArray = function (array) {
     for (let s of array) {
-        return this.push(s);
+        this.push(s);
     }
     return this;
 };

@@ -6,7 +6,8 @@ declare interface Set<T> {
     push(val: any): Set<T>;
     isSubset(val: Set<T>): boolean;
     toString(notation?: string, wrapper?): string;
-    pushArray(array: Array<any>);
+    pushArray(array: Array<any>): Set<T>;
+    intersect(set: Set<T>): Set<T>;
 }
 
 declare interface Array<T> {
@@ -29,6 +30,9 @@ function isArrayEqual(array1: Array<any>, array2: Array<any>) {
     return array1.length === array2.length && array1.sort().join(',') === array2.sort().join(',');
 }
 
+Set.prototype.intersect = function (set) {
+    return new Set([...set].filter(el => this.contains(el)));
+}
 
 
 Set.prototype.contains = function (val) {
@@ -51,7 +55,7 @@ Set.prototype.push = function (val) {
 
 Set.prototype.pushArray = function (array) {
     for (let s of array) {
-        return this.push(s);
+        this.push(s);
     }
     return this;
 }
