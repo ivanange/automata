@@ -1,6 +1,15 @@
 import "./bootstrap";
 
 // node -r esm dist/AF.js
+
+export interface AFProps {
+    states: Set<any>;
+    initialState: any;
+    finalStates: Set<any>;
+    alphabet: Set<string>;
+    transitions: Array<transition>;
+}
+
 export default class AF {
 
     public static readonly e = ""; //epselon
@@ -11,6 +20,7 @@ export default class AF {
     protected readonly initialState: any;
     protected currentState: any;
     protected hasETransitions: Boolean;
+    protected static i: number = 0;
 
     public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>) {
         // check there are no duplicate transitions
@@ -39,7 +49,7 @@ export default class AF {
     }
 
     public transiter(symbol: string, state?: any): Array<any> {
-        this.currentState = typeof state !== "undefined" ? state : this.currentState;
+        this.currentState = state !== undefined ? state : this.currentState;
         return this.optimize(
             this.transitions
                 .filter(el => el[0] + "" === this.currentState + "" && el[1] === symbol)
@@ -54,13 +64,13 @@ export default class AF {
         );
     }
 
-    public eSingleFermeture(state: any): Array<any> {
+    public eSingleFermeture(state: any, usedStates: any[] = []): Array<any> {
         let s = this.transiter(AF.e, state);
 
         return this.optimize(
             [].concat(
                 [state],
-                ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])
+                ...(s.length > 0 ? s.filter(e => usedStates.indexOf(e) == -1).map(el => this.eSingleFermeture(el, [...usedStates, state])) : [[]])
             )
         );
     }
@@ -72,7 +82,7 @@ export default class AF {
     }
 
     public eTransiter(symbol: string, state?: any): Array<any> {
-        state = typeof state !== "undefined" ? state : this.currentState;
+        state = state !== undefined ? state : this.currentState;
         return this.optimize(
             this.eFermeture(
                 this.transiterArray(symbol, this.eSingleFermeture(state))
@@ -85,9 +95,9 @@ export default class AF {
         return this;
     }
 
-    public analyze(word: Array<string>, currentState?): Array<any> {
-        this.hasETransitions = typeof this.hasETransitions !== "undefined" ? this.hasETransitions : this.isEAFN();
-        this.currentState = typeof currentState !== "undefined" ? currentState : this.currentState;
+    public analyze(word: Array<string>, currentState?: undefined): Array<any> {
+        this.hasETransitions = this.hasETransitions !== undefined ? this.hasETransitions : this.isEAFN();
+        this.currentState = currentState !== undefined ? currentState : this.currentState;
         let next = word.shift();
         let transitionFunction = this.hasETransitions ? "eTransiter" : "transiter";
 
@@ -95,7 +105,7 @@ export default class AF {
             word.length == 0 ?
                 this[transitionFunction](next) :
                 [].concat(
-                    ...this[transitionFunction](next).map(el => this.analyze([...word], el))
+                    ...this[transitionFunction](next).map((el: any) => this.analyze([...word], el))
                 )
         );
     }
@@ -136,7 +146,7 @@ export default class AF {
     }
 
     public complete(pullState?: any): AF {
-        pullState = typeof pullState !== "undefined" ? pullState : [...this.states].join(""); // creat pull state
+        pullState = pullState !== undefined ? pullState : [...this.states].join(""); // creat pull state
         let states: Set<any> = new Set([...this.states, pullState]);
         let transitions: Array<transition> = [];
         this.states.forEach((s) => {
@@ -178,7 +188,7 @@ export default class AF {
         return new AF(states, initialState, finalStates, this.alphabet, transitions);
     }
 
-    public unDeterminise(state?): AF {
+    public unDeterminise(state?: any): AF {
         // create an epselon transition on a random state
         // give possibility to pass states on which to create epselon transitions as arguments [ [from, to], ... ]
         return this;
@@ -203,19 +213,159 @@ export default class AF {
 
             return new AF(this.states, this.initialState, finalStates, this.alphabet, transitions);
         }
-        else return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+        else return AF.make(this);
+    }
+    public getRandomInt(exclusion: Array<any> = []): any {
+        let upperBound = 50;
+        let n = AF.i + "";
+        AF.i++;
+        while (exclusion.find((val) => {
+            return (val + "") === n;
+        }) !== undefined) {
+            n = (upperBound * Math.random()).toFixed(2);
+        }
+        return n;
     }
 
-    public toAFN(state?): AF {
+
+    public thompsonSymbol(symbol: string): AFProps {
+        let is = this.getRandomInt();
+        let fs = this.getRandomInt([is]);
+        return {
+            initialState: is,
+            alphabet: new Set([symbol]),
+            finalStates: new Set([fs]),
+            states: new Set([is, fs]),
+            transitions: [
+                [is, symbol, fs]
+            ]
+        };
+    }
+    public thompsonConcatenate(afs: Array<AFProps>): AFProps {
+        return afs.reduce((acc, el) => {
+            return acc = {
+                initialState: acc.initialState,
+                alphabet: acc.alphabet.pushArray([...el.alphabet]),
+                finalStates: el.finalStates,
+                states: acc.states.pushArray([...el.states]),
+                transitions: [
+                    ...acc.transitions,
+                    ...el.transitions,
+                    [[...acc.finalStates][0], AF.e, el.initialState]
+                ]
+            };
+        });
+    }
+    public thompsonUnite(afs: Array<AFProps>): AFProps {
+        return afs.reduce((acc, el) => {
+            let is = this.getRandomInt([...acc.states, ...el.states]);
+            let fs = this.getRandomInt([...acc.states, ...el.states, is]);
+            let accFinalState = [...acc.finalStates][0];
+            let elFinalState = [...el.finalStates][0];
+            return acc = {
+                initialState: is,
+                alphabet: acc.alphabet.pushArray([...el.alphabet]),
+                finalStates: new Set([fs]),
+                states: acc.states.pushArray([...el.states, is, fs]),
+                transitions: [
+                    ...acc.transitions,
+                    ...el.transitions,
+                    [is, AF.e, el.initialState],
+                    [is, AF.e, acc.initialState],
+                    [elFinalState, AF.e, fs],
+                    [accFinalState, AF.e, fs],
+                ]
+            };
+        });
+    }
+
+    public thomposnIterate(af: AFProps): AFProps {
+        let is = this.getRandomInt([...af.states]);
+        let fs = this.getRandomInt([...af.states, is]);
+        let afFinalState = [...af.finalStates][0];
+        return {
+            ...af,
+            initialState: is,
+            finalStates: new Set([fs]),
+            states: af.states.pushArray([is, fs]),
+            transitions: [
+                ...af.transitions,
+                [is, AF.e, fs],
+                [is, AF.e, af.initialState],
+                [afFinalState, AF.e, af.initialState],
+                [afFinalState, AF.e, fs],
+            ]
+        };
+    }
+    public isValid(str: string): Boolean {
+        let o: number = str.indexOf("(");
+        let c: number = str.indexOf(")");
+        return o <= c;
+    }
+    public parseRegex(regex: string): AFProps {
+        let split: string[] | RegExpExecArray;
+        let exp = /\((.+)\)(\*?)|([^\+\.\*\(\)]+)(\*?)/g;
+        let i;
+        if (
+            (split = (exp).exec(regex))
+            && (i = split[1] ? 1 : 3)
+            && split[0].length == regex.length
+            && this.isValid(split[i])
+        ) {
+            let af: AFProps;
+            if (i > 2) {
+                af = this.thompsonSymbol(split[i].trim());
+            }
+            else {
+                af = this.parseRegex(split[i]);
+            }
+            return split[i + 1] ? this.thomposnIterate(af) : af;
+        }
+
+        exp = /(\(.+?\)\*?)\+|([^\+\*\(\)]+\*?)\+/g;
+
+        if (
+            (split = exp.exec(regex))
+            && (i = split[1] ? 1 : 2)
+            && this.isValid(split[i])
+            && regex.startsWith(split[i][0])
+        ) {
+            return this.thompsonUnite([this.parseRegex(split[i]), this.parseRegex(regex.slice(exp.lastIndex))]);
+        }
+
+        exp = /(\(.+?\)\*?)\.|([^\.\*\(\)]+\*?)\./g;
+
+        if (
+            (split = exp.exec(regex))
+            && (i = split[1] ? 1 : 2)
+            && this.isValid(split[i])
+            && regex.startsWith(split[i][0])
+        ) {
+            return this.thompsonConcatenate([this.parseRegex(split[i]), this.parseRegex(regex.slice(exp.lastIndex))]);
+        }
+        else {
+            throw "Invalid Expression";
+        }
+    }
+
+    public static make(af: any): AF {
+        return new AF(af.states, af.initialState, af.finalStates, af.alphabet, af.transitions);
+    }
+
+    public fromRegex(regex: string): AF {
+        return AF.make(this.parseRegex(regex));
+    }
+
+    public toAFN(state?: undefined): AF {
         if (this.isDeterministic()) return this.unDeterminise(state);
         else return this.eAFNtoAFN();
     }
 
     public toAFD(): AF {
-        if (this.isDeterministic()) return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+        if (this.isDeterministic()) return AF.make(this);
         else this.toAFN().determinise();
     }
-    public toEAFN(state?): AF {
+    public toEAFN(state?: any): AF {
         // add reflexive e-transition on a state
         return this;
     }
@@ -247,14 +397,19 @@ export default class AF {
         return this.toString("[,]", '","', "{,}");
     }
 
+
+    // trim and filter empty chars, ignore spaces
     // to e-AFN
-    //  edit properties : create new automata to materailize changes intstead of 
-    // static make : return new automaton from json string : recursively ( to any depth ) convert each array to set, except transitions array itself (but not whats in it)
+    // implement toSet, and mapToSet  method on array prototype
+    // parse : parse json string : recursively ( to any depth ) convert each array to set, except transitions array itself (but not whats in it)
+    // static make : return new automaton from AFProps object
+    // static fromJson: return new automaton from json string
+    // update functions to use make by af = {...this} then AF.make(af)
     // renameStates([new names]) : AF
-    // determine automaton type: AF, AFD, AFC, AFN, AFNC, AFDC, e-AFN : (is eAFN ? e- : "" ) + AF + (isdeterministic ? D : N ) + (isComplete ? C : "")
     // functionalities :  un-determinize
     // to regexp, from regexp
     // use jsdoc to generate documentation
+    //  edit properties : create new automata to materailize changes intstead of 
 
 
 

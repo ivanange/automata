@@ -1,5 +1,4 @@
 import "./bootstrap";
-// node -r esm dist/AF.js
 export default class AF {
     constructor(Q, Qi, F, E, S) {
         // check there are no duplicate transitions
@@ -29,7 +28,7 @@ export default class AF {
         return [...set.pushArray(array)];
     }
     transiter(symbol, state) {
-        this.currentState = typeof state !== "undefined" ? state : this.currentState;
+        this.currentState = state !== undefined ? state : this.currentState;
         return this.optimize(this.transitions
             .filter(el => el[0] + "" === this.currentState + "" && el[1] === symbol)
             .map(el => el[2]));
@@ -37,15 +36,15 @@ export default class AF {
     transiterArray(symbol, states) {
         return this.optimize([].concat(...states.map(el => this.transiter(symbol, el))));
     }
-    eSingleFermeture(state) {
+    eSingleFermeture(state, usedStates = []) {
         let s = this.transiter(AF.e, state);
-        return this.optimize([].concat([state], ...(s.length > 0 ? s.map(el => this.eSingleFermeture(el)) : [[]])));
+        return this.optimize([].concat([state], ...(s.length > 0 ? s.filter(e => usedStates.indexOf(e) == -1).map(el => this.eSingleFermeture(el, [...usedStates, state])) : [[]])));
     }
     eFermeture(es) {
         return this.optimize([].concat(...es.map(el => this.eSingleFermeture(el))));
     }
     eTransiter(symbol, state) {
-        state = typeof state !== "undefined" ? state : this.currentState;
+        state = state !== undefined ? state : this.currentState;
         return this.optimize(this.eFermeture(this.transiterArray(symbol, this.eSingleFermeture(state))));
     }
     reset() {
@@ -53,13 +52,13 @@ export default class AF {
         return this;
     }
     analyze(word, currentState) {
-        this.hasETransitions = typeof this.hasETransitions !== "undefined" ? this.hasETransitions : this.isEAFN();
-        this.currentState = typeof currentState !== "undefined" ? currentState : this.currentState;
+        this.hasETransitions = this.hasETransitions !== undefined ? this.hasETransitions : this.isEAFN();
+        this.currentState = currentState !== undefined ? currentState : this.currentState;
         let next = word.shift();
         let transitionFunction = this.hasETransitions ? "eTransiter" : "transiter";
         return this.optimize(word.length == 0 ?
             this[transitionFunction](next) :
-            [].concat(...this[transitionFunction](next).map(el => this.analyze([...word], el))));
+            [].concat(...this[transitionFunction](next).map((el) => this.analyze([...word], el))));
     }
     slice(word) {
         // change visibility to protected
@@ -87,7 +86,7 @@ export default class AF {
         }).length > 0).length == 0 && !this.isEAFN();
     }
     complete(pullState) {
-        pullState = typeof pullState !== "undefined" ? pullState : [...this.states].join(""); // creat pull state
+        pullState = pullState !== undefined ? pullState : [...this.states].join(""); // creat pull state
         let states = new Set([...this.states, pullState]);
         let transitions = [];
         this.states.forEach((s) => {
@@ -148,7 +147,132 @@ export default class AF {
             return new AF(this.states, this.initialState, finalStates, this.alphabet, transitions);
         }
         else
-            return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+            return AF.make(this);
+    }
+    getRandomInt(exclusion = []) {
+        let upperBound = 50;
+        let n = AF.i + "";
+        AF.i++;
+        while (exclusion.find((val) => {
+            return (val + "") === n;
+        }) !== undefined) {
+            n = (upperBound * Math.random()).toFixed(2);
+        }
+        return n;
+    }
+    thompsonSymbol(symbol) {
+        let is = this.getRandomInt();
+        let fs = this.getRandomInt([is]);
+        return {
+            initialState: is,
+            alphabet: new Set([symbol]),
+            finalStates: new Set([fs]),
+            states: new Set([is, fs]),
+            transitions: [
+                [is, symbol, fs]
+            ]
+        };
+    }
+    thompsonConcatenate(afs) {
+        return afs.reduce((acc, el) => {
+            return acc = {
+                initialState: acc.initialState,
+                alphabet: acc.alphabet.pushArray([...el.alphabet]),
+                finalStates: el.finalStates,
+                states: acc.states.pushArray([...el.states]),
+                transitions: [
+                    ...acc.transitions,
+                    ...el.transitions,
+                    [[...acc.finalStates][0], AF.e, el.initialState]
+                ]
+            };
+        });
+    }
+    thompsonUnite(afs) {
+        return afs.reduce((acc, el) => {
+            let is = this.getRandomInt([...acc.states, ...el.states]);
+            let fs = this.getRandomInt([...acc.states, ...el.states, is]);
+            let accFinalState = [...acc.finalStates][0];
+            let elFinalState = [...el.finalStates][0];
+            return acc = {
+                initialState: is,
+                alphabet: acc.alphabet.pushArray([...el.alphabet]),
+                finalStates: new Set([fs]),
+                states: acc.states.pushArray([...el.states, is, fs]),
+                transitions: [
+                    ...acc.transitions,
+                    ...el.transitions,
+                    [is, AF.e, el.initialState],
+                    [is, AF.e, acc.initialState],
+                    [elFinalState, AF.e, fs],
+                    [accFinalState, AF.e, fs],
+                ]
+            };
+        });
+    }
+    thomposnIterate(af) {
+        let is = this.getRandomInt([...af.states]);
+        let fs = this.getRandomInt([...af.states, is]);
+        let afFinalState = [...af.finalStates][0];
+        return {
+            ...af,
+            initialState: is,
+            finalStates: new Set([fs]),
+            states: af.states.pushArray([is, fs]),
+            transitions: [
+                ...af.transitions,
+                [is, AF.e, fs],
+                [is, AF.e, af.initialState],
+                [afFinalState, AF.e, af.initialState],
+                [afFinalState, AF.e, fs],
+            ]
+        };
+    }
+    isValid(str) {
+        let o = str.indexOf("(");
+        let c = str.indexOf(")");
+        return o <= c;
+    }
+    parseRegex(regex) {
+        let split;
+        let exp = /\((.+)\)(\*?)|([^\+\.\*\(\)]+)(\*?)/g;
+        let i;
+        if ((split = (exp).exec(regex))
+            && (i = split[1] ? 1 : 3)
+            && split[0].length == regex.length
+            && this.isValid(split[i])) {
+            let af;
+            if (i > 2) {
+                af = this.thompsonSymbol(split[i].trim());
+            }
+            else {
+                af = this.parseRegex(split[i]);
+            }
+            return split[i + 1] ? this.thomposnIterate(af) : af;
+        }
+        exp = /(\(.+?\)\*?)\+|([^\+\*\(\)]+\*?)\+/g;
+        if ((split = exp.exec(regex))
+            && (i = split[1] ? 1 : 2)
+            && this.isValid(split[i])
+            && regex.startsWith(split[i][0])) {
+            return this.thompsonUnite([this.parseRegex(split[i]), this.parseRegex(regex.slice(exp.lastIndex))]);
+        }
+        exp = /(\(.+?\)\*?)\.|([^\.\*\(\)]+\*?)\./g;
+        if ((split = exp.exec(regex))
+            && (i = split[1] ? 1 : 2)
+            && this.isValid(split[i])
+            && regex.startsWith(split[i][0])) {
+            return this.thompsonConcatenate([this.parseRegex(split[i]), this.parseRegex(regex.slice(exp.lastIndex))]);
+        }
+        else {
+            throw "Invalid Expression";
+        }
+    }
+    static make(af) {
+        return new AF(af.states, af.initialState, af.finalStates, af.alphabet, af.transitions);
+    }
+    fromRegex(regex) {
+        return AF.make(this.parseRegex(regex));
     }
     toAFN(state) {
         if (this.isDeterministic())
@@ -158,7 +282,7 @@ export default class AF {
     }
     toAFD() {
         if (this.isDeterministic())
-            return new AF(this.states, this.initialState, this.finalStates, this.alphabet, this.transitions);
+            return AF.make(this);
         else
             this.toAFN().determinise();
     }
@@ -190,3 +314,4 @@ export default class AF {
     }
 }
 AF.e = ""; //epselon
+AF.i = 0;

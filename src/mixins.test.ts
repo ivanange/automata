@@ -43,11 +43,28 @@ console.log(
 // E.transiter("a", 0)
 let s;
 console.log(
-
+    B.isComplete(),
 
 );
 
+s = E.fromRegex("(a+b)*")
 console.log(
-    E.analyze("aaaaabcccccb".split("")),
-    E.eAFNtoAFN(),
-)
+    //E.analyze("aaaaabccccc".split("")),
+    //E.eAFNtoAFN(),
+    //E.thompsonUnite([E.thompsonSymbol("b"), E.thompsonSymbol("a")])
+    //E.thomposnIterate(E.thompsonUnite([E.thompsonSymbol("b"), E.thompsonSymbol("a")])),
+    /*
+        E.parseRegex("a+b"),
+        E.parseRegex("(a+b)"),
+        E.parseRegex("(a+b)*"),
+        E.parseRegex("(a+b)*.c"),
+        E.parseRegex("(a+b)*.c*"),
+        E.parseRegex("((a.b.b+b.b)*.(a.a)*)*"),
+    */
+    //E.fromRegex("((a.b.b+b.b)*.(a.a)*)*").analyze("aaabbbbaa".split("")), 
+    // .analyze("aaa".split(""))
+    //s,
+    //s.eSingleFermeture('6'),
+    s.recognize("aaabbbbaa"),
+
+); 
