@@ -36,24 +36,41 @@ console.log(
     E.transiterArray("a", [1, 2, 0]),
 */
 // E.transiter("a", 0)
-let s;
-console.log(B.isComplete());
-s = E.fromRegex("(a+b)*");
+console.log(
+//B.isComplete(),
+//D.isDeterministic(),
+);
+// s = AF.fromRegex(D.toRegex())
+//s = AF.fromRegex("a+b")
+let s = C.toRegex();
+let K = AF.fromRegex(s);
 console.log(
 //E.analyze("aaaaabccccc".split("")),
 //E.eAFNtoAFN(),
 //E.thompsonUnite([E.thompsonSymbol("b"), E.thompsonSymbol("a")])
 //E.thomposnIterate(E.thompsonUnite([E.thompsonSymbol("b"), E.thompsonSymbol("a")])),
 /*
-    E.parseRegex("a+b"),
-    E.parseRegex("(a+b)"),
-    E.parseRegex("(a+b)*"),
-    E.parseRegex("(a+b)*.c"),
-    E.parseRegex("(a+b)*.c*"),
-    E.parseRegex("((a.b.b+b.b)*.(a.a)*)*"),
+    AF.parseRegex("a+b"),
+    AF.parseRegex("(a+b)"),
+    AF.parseRegex("(a+b)*"),
+    AF.parseRegex("(a+b)*.c"),
+    AF.parseRegex("(a+b)*.c*"),
+    AF.parseRegex("((a.b.b+b.b)*.(a.a)*)*"),
 */
 //E.fromRegex("((a.b.b+b.b)*.(a.a)*)*").analyze("aaabbbbaa".split("")), 
 // .analyze("aaa".split(""))
 //s,
 //s.eSingleFermeture('6'),
-s.recognize("aaabbbbaa"));
+//s.recognize("aaabbbbaa"),
+//s,
+//AF.parseJson(E.toJson()),
+//D.toRegex(),
+//s.recognize("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaababababababaabababababaabbaba"),
+//D.toJson(),
+s, K);
+let KO = AF.clotureUnion([AF.fromRegex("a*"), AF.fromRegex("b*")]);
+console.log(
+//D.recognize("aaaaaaaaaaaaaaabbababababababababababababa"),
+//AF.fromRegex("(a+b)*").toRegex(),
+//K.recognize("aaaaaaaaaaaaaaabbababababababababababababa")
+KO.recognize("bbbbb"), KO.recognize("aaaaa"));

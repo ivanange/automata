@@ -41,6 +41,9 @@ Set.prototype.toString = function (notation = "{,}", wrapper = ",") {
     let notationA = notation.split(",");
     return `${notationA[0] + [...this].stringify(notation, wrapper) + notationA[1]}`;
 };
+Set.prototype.zip = function (set, callback) {
+    return new Set([...this].zip([...set], callback));
+};
 Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
     wrapper = wrapper.split(",");
     wrapper[1] = wrapper[1] || wrapper[0];
@@ -48,4 +51,16 @@ Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
 };
 Array.prototype.toString = function (notation = "{,}", wrapper = ",") {
     return `[${this.stringify(notation, wrapper)}]`;
+};
+Array.prototype.toSet = function () {
+    return new Set(this.map(el => el instanceof Array ? el.toSet() : el));
+};
+Array.prototype.mapToSet = function () {
+    return this.map(el => el instanceof Array ? el.toSet() : el);
+};
+Array.prototype.mapToInt = function () {
+    return this.map(el => el instanceof Array ? el.mapToInt() : eval(el));
+};
+Array.prototype.zip = function (arr, callback) {
+    return [].concat(...this.map(el => arr.map(e => callback ? callback(el, e) : new Set([el, e]))));
 };

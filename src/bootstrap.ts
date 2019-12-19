@@ -8,11 +8,16 @@ declare interface Set<T> {
     toString(notation?: string, wrapper?): string;
     pushArray(array: Array<any>): Set<T>;
     intersect(set: Set<T>): Set<T>;
+    zip(set: Set<T>, callback: Function): Set<T>;
 }
 
 declare interface Array<T> {
     stringify(notation?: string, wrapper?): string
     toString(notation?: string, wrapper?): string
+    toSet(): Set<T>;
+    mapToSet(): Array<T>;
+    mapToInt(): Array<T>;
+    zip(arr: Array<T>, callback: Function): Array<T>;
 }
 
 
@@ -29,6 +34,7 @@ function applyMixins(derivedCtor: any, baseCtors: any[]) {
 function isArrayEqual(array1: Array<any>, array2: Array<any>) {
     return array1.length === array2.length && array1.sort().join(',') === array2.sort().join(',');
 }
+
 
 Set.prototype.intersect = function (set) {
     return new Set([...set].filter(el => this.contains(el)));
@@ -71,6 +77,12 @@ Set.prototype.toString = function (notation = "{,}", wrapper = ",") {
     return `${notationA[0] + [...this].stringify(notation, wrapper) + notationA[1]}`;
 }
 
+Set.prototype.zip = function (set, callback) {
+    return new Set(
+        [...this].zip([...set], callback)
+    );
+}
+
 Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
     wrapper = wrapper.split(",");
     wrapper[1] = wrapper[1] || wrapper[0];
@@ -79,4 +91,22 @@ Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
 
 Array.prototype.toString = function (notation = "{,}", wrapper = ",") {
     return `[${this.stringify(notation, wrapper)}]`;
+}
+
+Array.prototype.toSet = function () {
+    return new Set(this.map(el => el instanceof Array ? el.toSet() : el));
+}
+
+Array.prototype.mapToSet = function () {
+    return this.map(el => el instanceof Array ? el.toSet() : el);
+}
+
+Array.prototype.mapToInt = function () {
+    return this.map(el => el instanceof Array ? el.mapToInt() : eval(el));
+}
+
+Array.prototype.zip = function (arr, callback) {
+    return [].concat(
+        ...this.map(el => arr.map(e => callback ? callback(el, e) : new Set([el, e])))
+    );
 }
