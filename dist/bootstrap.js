@@ -7,7 +7,7 @@ function applyMixins(derivedCtor, baseCtors) {
     });
 }
 function isArrayEqual(array1, array2) {
-    return array1.length === array2.length && array1.sort().join(',') === array2.sort().join(',');
+    return array1.length === array2.length && array1.map(e => e + "").sort().join(',') === array2.sort().join(',');
 }
 Set.prototype.intersect = function (set) {
     return new Set([...set].filter(el => this.contains(el)));
@@ -19,7 +19,7 @@ Set.prototype.contains = function (val) {
             return isArrayEqual([...val], [...el]);
         }) ? true : false;
     }
-    return this.has(val);
+    return this.has(val) || (typeof val == 'string' ? this.has(parseFloat(val)) : this.has(val + ""));
 };
 Set.prototype.push = function (val) {
     if (!this.contains(val)) {

@@ -67,10 +67,15 @@ console.log(
 //D.toRegex(),
 //s.recognize("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaababababababaabababababaabbaba"),
 //D.toJson(),
-s, K);
-let KO = AF.clotureUnion([AF.fromRegex("a*"), AF.fromRegex("b*")]);
+s, K, [].zip([]).toString());
+let k = AF.fromRegex("a.b").toAFD();
+let o = AF.fromRegex("a.a*.b").toAFD();
+let KO = AF.clotureUnion([k, o]);
+let KI = AF.clotureIntersection([k, o]);
+let KM = AF.clotureMiroir(k);
+let KC = AF.clotureConcatenation([k, o]);
 console.log(
 //D.recognize("aaaaaaaaaaaaaaabbababababababababababababa"),
 //AF.fromRegex("(a+b)*").toRegex(),
 //K.recognize("aaaaaaaaaaaaaaabbababababababababababababa")
-KO.recognize("bbbbb"), KO.recognize("aaaaa"));
+k.toJson(), o.toJson(), KO.toJson(), KO.recognize("ab"), KO.recognize("aab"), KI.recognize("ab"), KM.recognize("ba"), KC.recognize("abab"));

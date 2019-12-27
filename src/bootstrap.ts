@@ -8,7 +8,7 @@ declare interface Set<T> {
     toString(notation?: string, wrapper?): string;
     pushArray(array: Array<any>): Set<T>;
     intersect(set: Set<T>): Set<T>;
-    zip(set: Set<T>, callback: Function): Set<T>;
+    zip(set: Set<T>, callback?: Function): Set<T>;
 }
 
 declare interface Array<T> {
@@ -17,7 +17,7 @@ declare interface Array<T> {
     toSet(): Set<T>;
     mapToSet(): Array<T>;
     mapToInt(): Array<T>;
-    zip(arr: Array<T>, callback: Function): Array<T>;
+    zip(arr: Array<T>, callback?: Function): Array<T>;
 }
 
 
@@ -32,7 +32,7 @@ function applyMixins(derivedCtor: any, baseCtors: any[]) {
 }
 
 function isArrayEqual(array1: Array<any>, array2: Array<any>) {
-    return array1.length === array2.length && array1.sort().join(',') === array2.sort().join(',');
+    return array1.length === array2.length && array1.map(e => e + "").sort().join(',') === array2.sort().join(',');
 }
 
 
@@ -48,7 +48,7 @@ Set.prototype.contains = function (val) {
             return isArrayEqual([...val], [...el]);
         }) ? true : false;
     }
-    return this.has(val);
+    return this.has(val) || (typeof val == 'string' ? this.has(parseFloat(val)) : this.has(val + ""));
 }
 
 
@@ -105,7 +105,7 @@ Array.prototype.mapToInt = function () {
     return this.map(el => el instanceof Array ? el.mapToInt() : eval(el));
 }
 
-Array.prototype.zip = function (arr, callback) {
+Array.prototype.zip = function (arr, callback?) {
     return [].concat(
         ...this.map(el => arr.map(e => callback ? callback(el, e) : new Set([el, e])))
     );

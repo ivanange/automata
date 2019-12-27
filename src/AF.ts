@@ -22,6 +22,7 @@ export default class AF {
     protected currentState: any;
     protected hasETransitions: Boolean;
     protected static i: number = 0;
+    public kind: string;
 
 	/*
 	@param Q : states, Qi : initial state, F : final states, E : alphabet, S : transitions
@@ -45,6 +46,7 @@ export default class AF {
             this.alphabet = E;
             this.transitions = S;
             this.currentState = this.initialState;
+            this.kind = this.type();
         }
     }
 
@@ -153,7 +155,7 @@ export default class AF {
 		test if AF is an e-AFN
 	*/
     public isEAFN(): Boolean {
-        return this.transitions.filter(el => el[1] == '').length > 0;
+        return this.transitions.filter(el => el[1] == AF.e).length > 0;
     }
 
 	/*
@@ -162,7 +164,7 @@ export default class AF {
     public isComplete(): Boolean {
         // check if each state has as many different transitions as there are symbols in the alphabet
         return [...this.states].filter(
-            el => this.transitions.filter(e => e[0] == el).length < this.alphabet.size
+            el => this.transitions.filter(e => e[0]+"" == el+"").length < this.alphabet.size
         ).length == 0;
     }
 
@@ -186,7 +188,7 @@ export default class AF {
 
         this.states.forEach((s) => {
             this.alphabet.forEach((el) => {
-                if (this.analyze([el], s).length == 0) af.transitions.push([s, el, pullState]);
+                if (this.transiter(el, s).length == 0) af.transitions.push([s, el, pullState]);
                 af.transitions.push([pullState, el, pullState]);
             });
         });
@@ -196,7 +198,6 @@ export default class AF {
     }
 
     public determinise(): AF {
-        console.log("determinise :")
         if (this.isEAFN()) return this.toAFN().determinise();
         let af: any = {
             ...AF.parseJson(this.toJson()),
@@ -230,10 +231,16 @@ export default class AF {
     public unDeterminise(state?: any): AF {
         let af = AF.parseJson(this.toJson());
         state = state || [...af.states][Math.floor(Math.random() * af.states.size)];
+        let newState = AF.getRandomInt([...af.states]);
+        af.states.push(newState);
+        af.transitions.concat(
+            af.transitions.filter(el => el[0]+"" === state+"" || el[2]+"" === state+"")
+                .map(el => [el[0]+"" === state+"" ? newState : el[0], el[1], el[1]+"" === state+"" ? newState : el[1]])
+        );
+        return AF.make(af);
     }
 
     public eAFNtoAFN(): AF {
-        console.log("eafn-afn", this);
         if (this.isEAFN()) {
             let af = {
                 ...AF.parseJson(this.toJson()),
@@ -243,7 +250,6 @@ export default class AF {
                         .filter(el => this.finalStates.intersect(new Set(this.eSingleFermeture(el))).size > 0)
                 ),
             };
-            console.log(af);
 
             [...this.states].map(state => {
                 this.alphabet.forEach(el => {
@@ -418,15 +424,11 @@ export default class AF {
 
     public static parseJson(json: string): AFProps {
         let object = JSON.parse(json);
-        object.states = object.states.mapToInt().toSet();
+        object.states = object.states.toSet();
         object.alphabet = object.alphabet.toSet();
         object.initialState = object.initialState instanceof Array ? object.initialState.toSet() : object.initialState;
-        object.finalStates = object.finalStates.mapToInt().toSet();
-        object.transitions = object.transitions.map(e => [
-            e[0] instanceof Array ? e[0].mapToInt() : eval(e[0]),
-            e[1],
-            e[2] instanceof Array ? e[2].mapToInt() : eval(e[2])
-        ].mapToSet());
+        object.finalStates = object.finalStates.toSet();
+        object.transitions = object.transitions.map(e => e.mapToSet());
         return object;
     }
 
@@ -459,7 +461,8 @@ export default class AF {
         toDelete.forEach(s => {
             s += "";
             let star: any = af.transitions.filter(el => el[0] + "" === s && el[2] + "" === s);
-            star = star.length ? AF.wrap(star.map(e => e[1]).reduce((acc, val) => (acc || AF.E) + "+" + (val || AF.E)), true) + "*" : ""
+            star = star.length ? AF.wrap(star.map(e => e[1]).reduce((acc, val) => (acc || AF.E) + "+" + (val || AF.E)), true) + "*" : "";
+            star = star.length > 1 ? star : "";
             let entrantes: Array<transition> = af.transitions.filter(el => el[2] + "" === s && el[0] + "" !== s);
             let sortantes: Array<transition> = af.transitions.filter(el => el[0] + "" === s && el[2] + "" !== s);
 
@@ -535,8 +538,12 @@ export default class AF {
         while (
             (
                 result = str.replace(/\(([^\+\(\)]+?)\)\.(.+)/g, "$1.$2")
-                    .replace(/(.+?)\.(\1\*)/g, "$2")
+                    .replace(/(.+?)\*?\.(\1\*)/g, "$2")
+                    .replace(/(.+?)\.(\(\1\)\*)/g, "$2")
+                    .replace(/(.+?)\*\.(\1)\*?/g, "$1*")
+                    .replace(/\((.+?)\)\*\.(\1)/g, "($1)*")
                     .replace(/ɛ\+([^\.\+\(\)\*]+\*)/g, "$1")
+                    .replace(/ɛ\*?\.(.+)/g, "$1")
                     .replace(/(.+?)\+(\1\*)/g, "$2")
             ) !== str
         ) {
@@ -547,7 +554,6 @@ export default class AF {
     }
 
     public static make(af: any): AF {
-        console.log(af);
         return new AF(af.states, af.initialState, af.finalStates, af.alphabet, af.transitions);
     }
 
@@ -595,51 +601,128 @@ export default class AF {
         return AF.make(af);
     }
 
-    public static clotureComplementation(af) {
+    public static clotureComplementation(af): AF {
         return AF.make({
             ...af,
             finalStates: new Set(
-                [...af.finalStates].filter(e => !af.finalStates.has(e))
+                [...af.states].filter(e => !af.finalStates.has(e))
             )
         });
     }
 
-    public static clotureUnion(afs: Array<any>) {
+    public static clotureEnsemble(afs: Array<AF>, union = true): AF {
 
-        return AF.make(afs.map(el => el.toAFD()).reduce((acc, af) => {
+        return afs.map(el => el.toAFD().complete()).reduce((acc, af) => {
             let states = acc.states.zip(af.states);
             let alphabet = new Set([...acc.alphabet, ...af.alphabet]);
-            return acc = {
+            return acc = AF.make({
                 alphabet: alphabet,
                 states: states,
                 initialState: new Set([acc.initialState, af.initialState]),
-                finalStates: new Set(
+                finalStates: new Set(union ?
                     [
                         ...acc.finalStates.zip(af.states),
                         ...acc.states.zip(af.finalStates)
                     ]
+                    : [...acc.finalStates.zip(af.finalStates)]
                 ),
-                transitions: [...states.zip(alphabet)].map((couple) => {
-                    console.log(couple);
-                    let [state, symbol] = [...couple]
-                    let [accState, afState] = [...state];
-                    console.log(state, symbol);
-                    return acc.transiter(symbol, accState).zip(af.transiter(symbol, afState)).map(
-                        el => [
-                            state,
-                            symbol,
-                            el
-                        ]);
-                })
-            }
+                transitions: [].concat(
+                    ...[...states.zip(alphabet)].map(couple => {
+                        let [state, symbol] = [...couple]
+                        let [accState, afState] = [...state];
+                        return acc.transiter(symbol, accState).zip(af.transiter(symbol, afState)).map(
+                            el => {
+                                return [
+                                    state,
+                                    symbol,
+                                    el
+                                ];
+                            });
+                    }).filter(e => e.length !== 0)
+                ),
+            });
+        });
+    }
+
+    public static clotureUnion(afs: Array<AF>): AF {
+        return AF.clotureEnsemble(afs, true);
+    }
+
+    public static clotureIntersection(afs: Array<AF>): AF {
+        return AF.clotureEnsemble(afs, false);
+    }
+
+    public static clotureMiroir(af): AF {
+        if (af.finalStates.size > 1) throw "Automaton has more than one final state";
+        return AF.make({
+            ...af,
+            initialState: [...af.finalStates][0],
+            finalStates: new Set([af.initialState]),
+            transitions: af.transitions.map(e => [e[2], e[1], e[0]])
+        });
+    }
+
+    public static clotureConcatenation(afs: Array<any>): AF {
+        return AF.make(afs.reduce((acc, af) => {
+            if ([...acc.states].filter(el => af.states.contains(el)).length > 0) throw "Automaton state are not disjoint";
+            else if (acc.finalStates.size > 1) throw "Automaton has more than 1 final state";
+            else if (acc.transitions.filter(e => acc.finalStates.contains(e[0])).length > 0) "Automatons final state degree is not nul (has putgoing transitions)";
+            return acc = {
+                ...acc,
+                alphabet: new Set([...acc.alphabet, ...af.alphabet]),
+                states: new Set([...acc.states, ...af.states]),
+                finalStates: af.finalStates,
+                transitions: acc.transitions.concat(af.transitions, [[[...acc.finalStates][0], AF.e, af.initialState]])
+            };
         }));
     }
 
+    public static clotureEtoile(af): AF {
+        return AF.make({
+            ...af,
+            transitions: af.transitions.concat([...af.finalStates].map(e => [e, AF.e, af.initialState]))
+        });
+    }
+    /*
+        public minimise(): AF {
+            if (!this.isDeterministic()) return this.determinise().minimise();
+            if (!this.isComplete()) return this.complete().minimise();
+    
+            let partitions: Set<Array<any>> = new Set([
+                new Set([...this.states].filter(el => !this.finalStates.contains(el))),
+                new Set([...this.finalStates])
+            ]);
+    
+            function test(parts: Set<Array<any>>) {
+                let af = {
+                    states: new Set(parts),
+                };
+                let destination;
+                for (let part in parts) {
+                    d = [];
+                    for (let [s1, s2] in part.zip(part)) {
+                        for (let symbol in this.alphabet) {
+                            d1 = this.transiter(symbol, s1);
+                            d2 = this.transiter(symbol, s2);
+    
+                            d.concat([d1, d2]);
+                            // construit u af a chaque appelle de test
+                            //if s1 and s2 on any symbol not in the same set 
+                            //mettre s2 dans le dans une nouvelle classe ( ajouter transitions ) et enlever le l'ancien
+    
+                        }
+                    }
+                }
+                // arriver ici on a fini on make(af)
+            }
+    
+        }
+    */
 	/*
 	returns type of the AF as string
 	*/
     public type(): string {
-        return `${this.isEAFN() ? "e-" : ""} AF${this.isDeterministic() ? "D" : "N" + this.isComplete() ? "C" : ""} `;
+        return `${this.isEAFN() ? "e-" : ""}AF${(this.isDeterministic() ? "D" : "N") + (this.isComplete() ? "C" : "")} `;
     }
 
 
@@ -668,6 +751,7 @@ export default class AF {
         return this.toString("[,]", '","', "{,}");
     }
 
+    // arrayisEqual to match any depth
     // closures
     // minimisation
     // multiple initial states
