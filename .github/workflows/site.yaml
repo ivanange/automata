@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     name: build site
     steps:
-    - name: current dir 
-      run: ls | echo  
+    - name: get repo
+      uses: actions/hello-world-javascript-action@v1
+      
     - name: copy files
-      uses: actions/checkout@v1
       run: yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
