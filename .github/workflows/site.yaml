@@ -9,6 +9,6 @@ jobs:
     name: build site
     steps:
     - name: current dir 
-      run: ls 
+      run: cd gui 
     - name: copy files
       run: yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
