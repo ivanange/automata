@@ -9,4 +9,4 @@ jobs:
     name: build site
     steps:
     - name: copy files
-      run: cp -a ../gui/public/. ../docs/
+      run: cp -a ${{ github.workspace }}/gui/public/. ${{ github.workspace }}/docs/
