@@ -9,4 +9,4 @@ jobs:
     name: build site
     steps:
     - name: copy files
-      run: cp -a README.md ./docs/
+      run: pwd ; yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
