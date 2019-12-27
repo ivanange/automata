@@ -11,4 +11,5 @@ jobs:
     - name: current dir 
       run: ls | echo  
     - name: copy files
+      uses: actions/checkout@v1
       run: yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
