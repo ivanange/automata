@@ -9,4 +9,4 @@ jobs:
     name: build site
     steps:
     - name: copy files
-      run: cp -a ./gui/public/. ./docs/
+      run: cp -a README.md ./docs/
