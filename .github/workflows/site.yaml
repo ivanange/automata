@@ -8,5 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     name: build site
     steps:
+    - name: current dir 
+      run: pwd 
     - name: copy files
-      run: pwd ; yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
+      run: yes | cp -af ${{ github.workspace }}/gui/public/ ${{ github.workspace }}/docs
