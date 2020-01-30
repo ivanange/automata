@@ -1,5 +1,5 @@
 // defining custom functions to make sets work as i want  
-
+require('es7-object-polyfill');
 
 declare interface Set<T> {
     contains(val: any): boolean;

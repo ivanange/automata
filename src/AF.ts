@@ -143,6 +143,68 @@ export default class AF {
         ));
         return sliced.filter(el => el.length > 0); // remove empty symbols from word
     }
+    public minimise(): AF {
+        if (!this.isDeterministic()) return this.toAFD().minimise();
+        if (!this.isComplete()) return this.complete().minimise();
+
+        var seperate = (partition: Set<any>, symbol: string): boolean => {
+            let splits: Object = {};
+            let destPartition: Set<any>;
+            partition.forEach((state) => {
+                let dest = this.transiter(symbol, state)[0];
+                destPartition = [...partitions].filter(el => el.contains(dest))[0];
+                splits[destPartition + ""] = (new Set()).pushArray([...(splits[destPartition + ""] || []), state]);
+
+            });
+
+            let newPartitions: Array<Set<any>> = Object.values(splits);
+            let seperated: boolean = newPartitions.length > 1;
+
+            if (seperated) {
+                partitions = (new Set()).pushArray(
+                    newPartitions.concat([...partitions].filter(el => el + "" != partition + ""))
+                );
+            }
+            else {
+                newTransitions.push([partition, symbol, destPartition]);
+            }
+            return seperated;
+
+        }
+
+        let partitions: Set<Set<any>> = new Set([
+            new Set([...this.states].filter(el => !this.finalStates.contains(el))),
+            new Set([...this.finalStates])
+        ]);
+
+        let seperated = false;
+        let newTransitions: Array<transition> = [];
+        do {
+            newTransitions = [];
+            for (let partition of partitions) {
+                for (let symbol of this.alphabet) {
+                    seperated = seperate(partition, symbol)
+                    if (seperated) {
+                        break;
+                    }
+                }
+                if (seperated) {
+                    break;
+                }
+            }
+        }
+        while (seperated == true);
+
+        return AF.make({
+            states: partitions,
+            alphabet: this.alphabet,
+            initialState: [...partitions].filter(el => el.contains(this.initialState))[0],
+            finalStates: new Set(
+                [...partitions].filter(el => [...el].filter(e => this.finalStates.contains(e)).length > 0)
+            ),
+            transitions: newTransitions
+        });
+    }
 
 	/*
 	@praram : word: the word to recognize
@@ -164,7 +226,7 @@ export default class AF {
     public isComplete(): Boolean {
         // check if each state has as many different transitions as there are symbols in the alphabet
         return [...this.states].filter(
-            el => this.transitions.filter(e => e[0]+"" == el+"").length < this.alphabet.size
+            el => this.transitions.filter(e => e[0] + "" == el + "").length < this.alphabet.size
         ).length == 0;
     }
 
@@ -234,8 +296,8 @@ export default class AF {
         let newState = AF.getRandomInt([...af.states]);
         af.states.push(newState);
         af.transitions.concat(
-            af.transitions.filter(el => el[0]+"" === state+"" || el[2]+"" === state+"")
-                .map(el => [el[0]+"" === state+"" ? newState : el[0], el[1], el[1]+"" === state+"" ? newState : el[1]])
+            af.transitions.filter(el => el[0] + "" === state + "" || el[2] + "" === state + "")
+                .map(el => [el[0] + "" === state + "" ? newState : el[0], el[1], el[1] + "" === state + "" ? newState : el[1]])
         );
         return AF.make(af);
     }

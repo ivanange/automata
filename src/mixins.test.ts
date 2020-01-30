@@ -15,6 +15,21 @@ let D = C.determinise();
 let E = new AF(new Set([0, 1, 2]), 0, new Set([2]), new Set("abc"), [
     [0, "a", 0], [0, AF.e, 1], [1, "b", 1], [1, AF.e, 2], [2, "c", 2]
 ]);
+
+let F = new AF(new Set([0, 1, 2, 3, 4, 5, 6]), 0, new Set([1, 3, 4, 6]), new Set("ab"), [
+    [0, "a", 1], [0, "b", 2], [1, "a", 4], [1, "b", 3], [2, "a", 3], [2, "b", 5], [3, "a", 6], [3, "b", 6],
+    [4, "a", 6], [4, "b", 2], [5, "a", 6], [5, "b", 3], [6, "a", 6], [6, "b", 6]
+]);
+let G = new AF(new Set([1, 2, 3, 4, 5, 6, 7, 8]), 1, new Set([8]), new Set("ab"), [
+    [1, "a", 2], [1, "b", 4], [2, "a", 3], [2, "b", 5], [3, "a", 6], [3, "b", 1], [4, "a", 3], [4, "b", 7],
+    [5, "a", 8], [5, "b", 6], [6, "a", 3], [6, "b", 6], [7, "a", 8], [7, "b", 6], [8, "a", 8], [8, "b", 7]
+]);
+
+console.log(
+    F.minimise().toString(),
+    G.minimise().toString(),
+);
+
 /*
 
 console.log(
@@ -49,8 +64,8 @@ console.log(
 
 // s = AF.fromRegex(D.toRegex())
 //s = AF.fromRegex("a+b")
-let s = C.toRegex();
-let K = AF.fromRegex(s);
+// let s = C.toRegex();
+// let K = AF.fromRegex(s);
 console.log(
     //E.analyze("aaaaabccccc".split("")),
     //E.eAFNtoAFN(),
@@ -74,27 +89,33 @@ console.log(
     //D.toRegex(),
     //s.recognize("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaababababababaabababababaabbaba"),
     //D.toJson(),
-    s, K,
-    [].zip([]).toString(),
+    //s, K,
+    //[].zip([]).toString(),
 );
 
+/**
+ * 
 let k = AF.fromRegex("a.b").toAFD();
 let o = AF.fromRegex("a.a*.b").toAFD();
 let KO = AF.clotureUnion([k, o]);
 let KI = AF.clotureIntersection([k, o]);
 let KM = AF.clotureMiroir(k);
 let KC = AF.clotureConcatenation([k, o]);
+ */
 console.log(
     //D.recognize("aaaaaaaaaaaaaaabbababababababababababababa"),
     //AF.fromRegex("(a+b)*").toRegex(),
     //K.recognize("aaaaaaaaaaaaaaabbababababababababababababa")
-    k.toJson(),
-    o.toJson(),
-    KO.toJson(),
-    KO.recognize("ab"),
-    KO.recognize("aab"),
-    KI.recognize("ab"),
-    KM.recognize("ba"),
-    KC.recognize("abab"),
+    /**
+     * 
+        k.toJson(),
+        o.toJson(),
+        KO.toJson(),
+        KO.recognize("ab"),
+        KO.recognize("aab"),
+        KI.recognize("ab"),
+        KM.recognize("ba"),
+        KC.recognize("abab"),
+     */
 
 ); 
