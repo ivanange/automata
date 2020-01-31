@@ -38,22 +38,85 @@ const vm = new Vue({
   },
   watch: {
     af(v) {
-      this.visualizatio(v);
+      this.visualization(v);
     }
   },
   methods: {
+    getsvg() {
+      var canvas = document.getElementById("canvas"),
+        ctx = canvas.getContext("2d"),
+        image = new Image();
+
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      function step() {
+        ctx.drawImage(image, 0, 0, 80, 80);
+        window.requestAnimationFrame(step);
+      }
+
+      window.requestAnimationFrame(step);
+    },
     visualization(auto, id = "representation") {
       let g = new Set(auto.states);
-      let h = [];
+      let h = [
+        {
+          id: -1,
+          label: "",
+          title: `state `,
+          color: "rgba(0,0,0,0)"
+        }
+      ];
+      let t = [];
+
       for (let i of g.values()) {
-        h.push({
-          id: i,
+        let lh = {
+          id: i + "",
           label: `${i}`,
           title: `state ${i}`,
-          arrows: "from;to;middel"
-        });
+          color: "#FFF"
+        };
+        let isInitial = false;
+        if (auto.finalStates.contains(i)) {
+          lh.color = {
+            border: "#007BFF",
+            background: "#ffffff"
+          };
+          lh.title = `finale state ${i}`;
+
+          if (auto.initialState instanceof Set) {
+            if ("" + auto.initialState == i + "") {
+              lh.title = `initiale and finale state ${i}`;
+              isInitial = true;
+            }
+          } else {
+            if ("" + auto.initialState == i + "") {
+              lh.title = `initiale and finale state ${i}`;
+              isInitial = true;
+            }
+          }
+        } else {
+          if (auto.initialState instanceof Set) {
+            if (auto.initialState.has(i)) {
+              lh.title = "initiale " + lh.title;
+              isInitial = true;
+            }
+          } else {
+            if ("" + auto.initialState == i + "") {
+              lh.title = "initiale " + lh.title;
+              isInitial = true;
+            }
+          }
+        }
+        if (isInitial) {
+          t.push({
+            from: -1,
+            to: i + "",
+            title: "Init state"
+          });
+        }
+        h.push(lh);
       }
-      let t = [];
+
       for (let i of auto.transitions.values()) {
         t.push({
           from: i[0],
@@ -65,7 +128,7 @@ const vm = new Vue({
             return width + 1;
           },
           title: `transition from state ${i[0]} to state ${i[2]}`,
-          label: i[1]
+          label: i[1] ? i[1] : "ɛ"
         });
       }
 
@@ -82,8 +145,12 @@ const vm = new Vue({
       };
       var options = {
         edges: {
-          arrows: "to"
-          //color: "red"
+          arrows: "to",
+          color: "black"
+        },
+        nodes: {
+          shape: "circle",
+          margin: 7
         }
       };
       var network = new vis.Network(container, data, options);

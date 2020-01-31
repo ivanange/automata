@@ -1,4 +1,5 @@
 // defining custom functions to make sets work as i want  
+require('es7-object-polyfill');
 function applyMixins(derivedCtor, baseCtors) {
     baseCtors.forEach(baseCtor => {
         Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {

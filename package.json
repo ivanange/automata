@@ -17,6 +17,8 @@
     "bootstrap-vue": "^2.1.0",
     "core-js": "^3.4.3",
     "d3-graphviz": "^2.6.1",
+    "es7-object-polyfill": "^1.0.1",
+    "object-keys": "^1.1.1",
     "register-service-worker": "^1.6.2",
     "vis-network": "^7.3.1",
     "vue": "^2.6.10",

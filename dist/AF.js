@@ -87,6 +87,57 @@ export default class AF {
         this.alphabet.forEach(s => sliced = [].concat(...sliced.map(el => el.split(new RegExp(`(${s})`)))));
         return sliced.filter(el => el.length > 0); // remove empty symbols from word
     }
+    minimise() {
+        if (!this.isDeterministic())
+            return this.toAFD().minimise();
+        if (!this.isComplete())
+            return this.complete().minimise();
+        var seperate = (partition, symbol) => {
+            let splits = {};
+            let destPartition;
+            partition.forEach((state) => {
+                let dest = this.transiter(symbol, state)[0];
+                destPartition = [...partitions].filter(el => el.contains(dest))[0];
+                splits[destPartition + ""] = (new Set()).pushArray([...(splits[destPartition + ""] || []), state]);
+            });
+            let newPartitions = Object.values(splits);
+            let seperated = newPartitions.length > 1;
+            if (seperated) {
+                partitions = (new Set()).pushArray(newPartitions.concat([...partitions].filter(el => el + "" != partition + "")));
+            }
+            else {
+                newTransitions.push([partition, symbol, destPartition]);
+            }
+            return seperated;
+        };
+        let partitions = new Set([
+            new Set([...this.states].filter(el => !this.finalStates.contains(el))),
+            new Set([...this.finalStates])
+        ]);
+        let seperated = false;
+        let newTransitions = [];
+        do {
+            newTransitions = [];
+            for (let partition of partitions) {
+                for (let symbol of this.alphabet) {
+                    seperated = seperate(partition, symbol);
+                    if (seperated) {
+                        break;
+                    }
+                }
+                if (seperated) {
+                    break;
+                }
+            }
+        } while (seperated == true);
+        return AF.make({
+            states: partitions,
+            alphabet: this.alphabet,
+            initialState: [...partitions].filter(el => el.contains(this.initialState))[0],
+            finalStates: new Set([...partitions].filter(el => [...el].filter(e => this.finalStates.contains(e)).length > 0)),
+            transitions: newTransitions
+        });
+    }
     /*
     @praram : word: the word to recognize
     */
