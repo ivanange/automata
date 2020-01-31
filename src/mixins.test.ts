@@ -28,6 +28,7 @@ let G = new AF(new Set([1, 2, 3, 4, 5, 6, 7, 8]), 1, new Set([8]), new Set("ab")
 console.log(
     F.minimise().toString(),
     G.minimise().toString(),
+
 );
 
 /*

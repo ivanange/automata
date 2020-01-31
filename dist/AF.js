@@ -8,6 +8,8 @@ export default class AF {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
         let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1); // verifie que aucun symbol n'est contenu dans un autres
+        if (!(Q.size && Qi != undefined && F.size && E.size && S.length))
+            throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
         if (!Q.contains(Qi))
             throw "Initial state not element of Q (set of all states)";
         else if (!Q.isSubset(F))
@@ -155,7 +157,13 @@ export default class AF {
     */
     isComplete() {
         // check if each state has as many different transitions as there are symbols in the alphabet
-        return [...this.states].filter(el => this.transitions.filter(e => e[0] + "" == el + "").length < this.alphabet.size).length == 0;
+        for (let state of this.states) {
+            let symbols = new Set(this.transitions.filter(e => e[0] + "" == state + "").map(trans => trans[1]));
+            if ([...this.alphabet].filter(el => symbols.contains(el)).length != this.alphabet.size) {
+                return false;
+            }
+        }
+        return true;
     }
     /*
         test if AF is an AFD

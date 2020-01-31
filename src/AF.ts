@@ -23,17 +23,19 @@ export default class AF {
     protected hasETransitions: Boolean;
     protected static i: number = 0;
     public kind: string;
+    public name: string;
 
 	/*
 	@param Q : states, Qi : initial state, F : final states, E : alphabet, S : transitions
 	return AF
 	*/
-    public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>) {
+    public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>, name?: string) {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
         let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1) // verifie que aucun symbol n'est contenu dans un autres
 
 
+        if (!(Q.size && Qi != undefined && F.size && E.size && S.length)) throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
         if (!Q.contains(Qi)) throw "Initial state not element of Q (set of all states)";
         else if (!Q.isSubset(F)) throw "Final states not subset of Q (set of all states)";
         else if (!E.isSubset(new Set(S.filter(e => e[1] != "").map(el => el[1])))) throw "A Symbol used in a transition does not exist in Sigma(alphabet)";
@@ -47,6 +49,7 @@ export default class AF {
             this.transitions = S;
             this.currentState = this.initialState;
             this.kind = this.type();
+            this.name = name;
         }
     }
 
@@ -225,9 +228,14 @@ export default class AF {
 	*/
     public isComplete(): Boolean {
         // check if each state has as many different transitions as there are symbols in the alphabet
-        return [...this.states].filter(
-            el => this.transitions.filter(e => e[0] + "" == el + "").length < this.alphabet.size
-        ).length == 0;
+
+        for (let state of this.states) {
+            let symbols: Set<any> = new Set(this.transitions.filter(e => e[0] + "" == state + "").map(trans => trans[1]));
+            if ([...this.alphabet].filter(el => symbols.contains(el)).length != this.alphabet.size) {
+                return false;
+            }
+        }
+        return true;
     }
 
 	/*
