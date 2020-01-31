@@ -18,6 +18,7 @@
     <b-modal id="modal" title="Automaton">
       <p>{{this.$root.modal}}</p>
     </b-modal>
+    <div id="representation"></div>
   </div>
 </template>
 
