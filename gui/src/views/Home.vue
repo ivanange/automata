@@ -18,6 +18,7 @@
     <b-modal id="modal" title="Automaton">
       <p>{{this.$root.modal}}</p>
     </b-modal>
+    <preview></preview>
   </div>
 </template>
 
@@ -28,7 +29,7 @@ import operationList from "@/components/operationList.vue";
 import recognize from "@/components/recognize.vue";
 import closures from "@/components/closures.vue";
 import automaton from "@/components/automaton.vue";
-
+import preview from "@/components/preview.vue";
 export default {
   name: "home",
   components: {
@@ -36,7 +37,8 @@ export default {
     operationList,
     recognize,
     closures,
-    automaton
+    automaton,
+    preview
   },
   data() {
     return {};

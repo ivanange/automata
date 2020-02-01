@@ -7,7 +7,9 @@ export default class AF {
     constructor(Q, Qi, F, E, S, name) {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
-        let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1); // verifie que aucun symbol n'est contenu dans un autres
+        console.log(E);
+        // /([^\+\.\*\(\)]+)(\*?)/g
+        let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el.replace(/([\[\]\^\.\|\?\*\+\(\)\$])/g, "\\$1"))).length > 1); // verifie que aucun symbol n'est contenu dans un autres
         if (!(Q.size && Qi != undefined && F.size && E.size && S.length))
             throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
         if (!Q.contains(Qi))
@@ -146,6 +148,22 @@ export default class AF {
     */
     recognize(word) {
         return this.reset().analyze(this.slice(word), undefined, true);
+    }
+    static recognizeText(words, afs) {
+        let regexs = afs.reduce((acc, af) => {
+            acc[af.name] = af.toRegex();
+            return acc;
+        }, {});
+        return words.map(word => {
+            let recognized;
+            for (let af of afs) {
+                recognized = af.recognize(word);
+                if (recognized) {
+                    return `<${word} : ${af.name} ( ${regexs[af.name]} )>`;
+                }
+            }
+            return `<${word} : unknown>`;
+        });
     }
     /*
         test if AF is an e-AFN
@@ -501,8 +519,11 @@ export default class AF {
     @param : regex : regular expression
         convert  regular expression to AF
     */
-    static fromRegex(regex) {
-        return AF.make(AF.parseRegex(AF.simplify(regex)));
+    static fromRegex(regex, name) {
+        return AF.make({
+            ...AF.parseRegex(AF.simplify(regex)),
+            name: name
+        });
     }
     /*
     @param : json : json string

@@ -18,7 +18,11 @@ let G = new AF(new Set([1, 2, 3, 4, 5, 6, 7, 8]), 1, new Set([8]), new Set("ab")
     [1, "a", 2], [1, "b", 4], [2, "a", 3], [2, "b", 5], [3, "a", 6], [3, "b", 1], [4, "a", 3], [4, "b", 7],
     [5, "a", 8], [5, "b", 6], [6, "a", 3], [6, "b", 6], [7, "a", 8], [7, "b", 6], [8, "a", 8], [8, "b", 7]
 ]);
-console.log(F.minimise().toString(), G.minimise().toString());
+console.log(
+// F.minimise().toString(),
+// G.minimise().toString(),
+AF.recognizeText(["if", "else", "cash", "while", "for", "let", "more", "$ta", "do", "$12ab"], [AF.fromRegex("if+else+let+while+do", "keyword"), AF.fromRegex("$.(1+2+3+4+5+6+7+8+9+0+a+b+c+t+m+o+r+e)*", "variable")]));
+//     AF.recognizeText(["if", "else", "cash", "while", "for",  "let", "more", "$a", "do",  "$12ab"], [AF.fromRegex("if+else+let"), AF.fromRegex("$.(1+2+3+4+5+6+7+8+9+0+a+b+c)*")])
 /*
 
 console.log(

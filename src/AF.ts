@@ -32,7 +32,11 @@ export default class AF {
     public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>, name?: string) {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
-        let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1) // verifie que aucun symbol n'est contenu dans un autres
+        let invalidSet = [...E].filter(
+            el => [...E].filter(
+                s => s.match(el.replace(/([\[\]\^\.\|\?\*\+\(\)\$])/g, "\\$1"))
+            ).length > 1
+        ); // verifie que aucun symbol n'est contenu dans un autres
 
 
         if (!(Q.size && Qi != undefined && F.size && E.size && S.length)) throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
@@ -215,6 +219,29 @@ export default class AF {
     public recognize(word: string): boolean | any[] {
         return this.reset().analyze(this.slice(word), undefined, true);
     }
+
+    public static recognizeText(words: Array<string>, afs: Array<AF>): Array<string> {
+        let regexs = afs.reduce((acc, af) => {
+            acc[af.name] = af.toRegex();
+            return acc;
+        }, {});
+
+        return words.map(word => {
+            let recognized;
+            for (let af of afs) {
+                recognized = af.recognize(word);
+                if (recognized) {
+                    return `<${word} : ${af.name} ( ${regexs[af.name]} )>`;
+                }
+            }
+            return `<${word} : unknown>`;
+        })
+
+
+
+    }
+
+
 
 	/*
 		test if AF is an e-AFN
@@ -623,7 +650,7 @@ export default class AF {
         return str;
     }
 
-    public static make({ states, initialState, finalStates, alphabet, transitions, name } : any): AF {
+    public static make({ states, initialState, finalStates, alphabet, transitions, name }: any): AF {
         return new AF(states, initialState, finalStates, alphabet, transitions, name);
     }
 
@@ -631,8 +658,11 @@ export default class AF {
 	@param : regex : regular expression
 		convert  regular expression to AF
 	*/
-    public static fromRegex(regex: string): AF {
-        return AF.make(AF.parseRegex(AF.simplify(regex)));
+    public static fromRegex(regex: string, name?: string): AF {
+        return AF.make({
+            ...AF.parseRegex(AF.simplify(regex)),
+            name: name
+        });
     }
 
 	/*
@@ -776,7 +806,7 @@ export default class AF {
                 ${ propsnotationA[0]}finalStates${propsnotationA[1]} : ${this.finalStates.toString(notation, propsnotation)} ,
                 ${ propsnotationA[0]}alphabet${propsnotationA[1]} : ${this.alphabet.toString(notation, propsnotation)},
                 ${ propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)},
-                ${ propsnotationA[0]}kind${propsnotationA[1]} : "${this.kind+""}",
+                ${ propsnotationA[0]}kind${propsnotationA[1]} : "${this.kind + ""}",
                 ${ propsnotationA[0]}name${propsnotationA[1]} : "${this.name + ""}"
                 ${ encloseA[1]}
                 `;
@@ -787,6 +817,10 @@ export default class AF {
 	*/
     public toJson(): string {
         return this.toString("[,]", '","', "{,}");
+    }
+
+    public toJSON(): string {
+        return this.toJson();
     }
 
     // arrayisEqual to match any depth
