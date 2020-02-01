@@ -8,10 +8,10 @@ import "bootstrap-vue/dist/bootstrap-vue.css";
 import "../../dist/bootstrap";
 import * as vis from "vis-network";
 import store from "./store";
-import vSelect from 'vue-select'
-import 'vue-select/dist/vue-select.css';
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
 
-Vue.component('v-select', vSelect);
+Vue.component("v-select", vSelect);
 
 Vue.use(BootstrapVue);
 Vue.config.productionTip = false;
@@ -26,13 +26,10 @@ const vm = new Vue({
     message: null,
     modal: "HI"
   },
-  mounted() {
-
-
-  },
+  mounted() {},
   watch: {
-    message: function () {
-      this.handler()
+    message: function() {
+      this.handler();
     },
     af(v) {
       this.visualization(v);
@@ -59,12 +56,14 @@ const vm = new Vue({
     },
     visualization(auto, id = "representation") {
       let g = new Set(auto.states);
-      let h = [{
-        id: -1,
-        label: "",
-        title: `state `,
-        color: "rgba(0,0,0,0)"
-      }];
+      let h = [
+        {
+          id: -1,
+          label: "",
+          title: `state `,
+          color: "rgba(0,0,0,0)"
+        }
+      ];
       let t = [];
 
       for (let i of g.values()) {
@@ -120,10 +119,10 @@ const vm = new Vue({
         t.push({
           from: i[0],
           to: i[2],
-          selectionWidth: function (width) {
+          selectionWidth: function(width) {
             return width + 2;
           },
-          hoverWidth: function (width) {
+          hoverWidth: function(width) {
             return width + 1;
           },
           title: `transition from state ${i[0]} to state ${i[2]}`,
@@ -143,6 +142,7 @@ const vm = new Vue({
         edges: edges
       };
       var options = {
+        height: "500px",
         edges: {
           arrows: "to",
           color: "black"
@@ -162,7 +162,7 @@ window.vm = vm;
 
 window.worker = worker;
 
-worker.onmessage = function (e) {
+worker.onmessage = function(e) {
   let data = e.data;
   console.log(data);
   if (data.status !== "ERROR") {
@@ -171,4 +171,4 @@ worker.onmessage = function (e) {
     vm.$data.modal = "Error : " + data.data;
     vm.$bvModal.show("modal");
   }
-}
+};

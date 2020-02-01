@@ -81,7 +81,15 @@ export default {
         var reader = new FileReader();
         reader.readAsText(f, "UTF-8");
         reader.onload = evt => {
-          this.text = evt.target.result.split(this.delemiter || " ");
+          this.text = evt.target.result
+            .replace(/\r\n|\n\r|\n|\r/gm, "")
+            .split(this.delemiter || " ")
+            .filter(v => {
+              if (v) {
+                return v;
+              }
+            });
+          console.log(this.text);
         };
         reader.onerror = function(evt) {
           alert("error reading file");
