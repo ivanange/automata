@@ -4,8 +4,14 @@
       <router-link to="/">
         <h3 class="d-inline">Home |</h3>
       </router-link>
-      <router-link to="/about">
-        <h3 class="d-inline"> About</h3>
+      <router-link to="/aboutjs">
+        <h3 class="d-inline">About JS Code</h3>
+      </router-link>
+      <router-link to="/aboutts">
+        <h3 class="d-inline">About TS Code</h3>
+      </router-link>
+      <router-link to="/authors">
+        <h3 class="d-inline">Authors</h3>
       </router-link>
     </div>
     <router-view />
