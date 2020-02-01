@@ -6,13 +6,14 @@ import {
 var af;
 self.onmessage = function (e) {
     let data = e.data;
-    let result;
+    let result, index;
     let callback = data.callback;
     let args = data.args.map(el => el === "this" ? af : el);
-    args = callback.map ? args.map(el => callback.excludeThis && el == af ? el : (callback.static ? AF : af)[callback.map](el)) : args;
-    console.log(data);
-    console.log(af);
-    console.log(args);
+    if ((index = callback.argIndex) != null) {
+        args[index] = callback.map ? args[index].map(el => callback.excludeThis && el == af ? el : (callback.static ? AF : af)[callback.map](el)) : args[index];
+    } else {
+        args = callback.map ? args.map(el => callback.excludeThis && el == af ? el : (callback.static ? AF : af)[callback.map](el)) : args;
+    }
 
     try {
         let object;
@@ -23,7 +24,6 @@ self.onmessage = function (e) {
             object = AF;
         }
         args = data.spread ? args : [args];
-        console.log(args);
         result = {
             ...resultObject,
             data: object[data.operation.name](...args),

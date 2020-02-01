@@ -169,8 +169,13 @@ export default {
       }
     },
     saveHandler(message) {
-      console.log(message, this.$refs);
-      this.addSaved(  { name: this.name, saved: message.data});
+      this.addSaved({
+        name: this.name,
+        saved: JSON.stringify({
+          ...JSON.parse(message.data),
+          name: this.name
+        })
+      });
       if (this.$refs.popup) {
         this.$refs.popup.$emit("close");
       }

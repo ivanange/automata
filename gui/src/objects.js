@@ -20,6 +20,7 @@ export const dataObject = {
     },
     callerId: "",
     type: "",
-    spread: true
+    spread: true,
+    argIndex: null
 
 };

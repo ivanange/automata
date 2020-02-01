@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="home p-2">
     <h1>Create Automaton</h1>
     <create></create>
     <h1 class="my-4">Automaton</h1>

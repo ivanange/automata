@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2>Representation graphique</h2>
-    <div ref="representation" id="representation" style="min-heigth: 250px" class="w-100"></div>
+    <div ref="representation" id="representation" style="min-heigth: 250px" class="w-100 mb-3"></div>
     <b-button @click="get_image">image</b-button>
   </div>
 </template>

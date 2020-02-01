@@ -286,12 +286,12 @@ export default class AF {
         this.states.forEach((s) => {
             this.alphabet.forEach((el) => {
                 if (this.transiter(el, s).length == 0) af.transitions.push([s, el, pullState]);
-                af.transitions.push([pullState, el, pullState]);
             });
         });
+        this.alphabet.forEach( (el) => af.transitions.push([pullState, el, pullState]) );
         // creer un état puis avecc toutes les transition sortantes qui revienent
         // sur lui et les transition manquante qui vont sur lui 
-        return AF.make(af);
+        return AF.make(af); 
     }
 
     public determinise(): AF {

@@ -32,10 +32,7 @@ export default {
     };
   },
   watch: {
-    transitions: function() {
-      this.fill();
-    },
-    states: function() {
+    "$root.af": function() {
       this.init();
     }
   },
@@ -45,7 +42,6 @@ export default {
         this.table.forEach(row => {
           let [i, s, q] = transition;
           if (row.states + "" === i + "") {
-            console.log(row, q);
             row[q + ""] =
               (row[q + ""].length ? row[q + ""] + "," : "") + (s ? s : "ɛ");
           }
@@ -54,7 +50,6 @@ export default {
       this.$root.$emit("bv::refresh::table", "table1");
     },
     init() {
-      console.log(this.states);
       this.fields = ["states", ...this.states].map(el => el + "");
       this.table = [...this.states].map(state => {
         let row = { states: state + "" };

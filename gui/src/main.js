@@ -28,7 +28,7 @@ const vm = new Vue({
   },
   mounted() {},
   watch: {
-    message: function() {
+    message: function () {
       this.handler();
     },
     af(v) {
@@ -56,14 +56,12 @@ const vm = new Vue({
     },
     visualization(auto, id = "representation") {
       let g = new Set(auto.states);
-      let h = [
-        {
-          id: -1,
-          label: "",
-          title: `state `,
-          color: "rgba(0,0,0,0)"
-        }
-      ];
+      let h = [{
+        id: -1,
+        label: "",
+        title: `state `,
+        color: "rgba(0,0,0,0)"
+      }];
       let t = [];
 
       for (let i of g.values()) {
@@ -119,10 +117,10 @@ const vm = new Vue({
         t.push({
           from: i[0],
           to: i[2],
-          selectionWidth: function(width) {
+          selectionWidth: function (width) {
             return width + 2;
           },
-          hoverWidth: function(width) {
+          hoverWidth: function (width) {
             return width + 1;
           },
           title: `transition from state ${i[0]} to state ${i[2]}`,
@@ -162,9 +160,8 @@ window.vm = vm;
 
 window.worker = worker;
 
-worker.onmessage = function(e) {
+worker.onmessage = function (e) {
   let data = e.data;
-  console.log(data);
   if (data.status !== "ERROR") {
     vm.$data.message = data;
   } else {

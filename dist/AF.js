@@ -7,8 +7,6 @@ export default class AF {
     constructor(Q, Qi, F, E, S, name) {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
-        console.log(E);
-        // /([^\+\.\*\(\)]+)(\*?)/g
         let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el.replace(/([\[\]\^\.\|\?\*\+\(\)\$])/g, "\\$1"))).length > 1); // verifie que aucun symbol n'est contenu dans un autres
         if (!(Q.size && Qi != undefined && F.size && E.size && S.length))
             throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
@@ -204,9 +202,9 @@ export default class AF {
             this.alphabet.forEach((el) => {
                 if (this.transiter(el, s).length == 0)
                     af.transitions.push([s, el, pullState]);
-                af.transitions.push([pullState, el, pullState]);
             });
         });
+        this.alphabet.forEach((el) => af.transitions.push([pullState, el, pullState]));
         // creer un état puis avecc toutes les transition sortantes qui revienent
         // sur lui et les transition manquante qui vont sur lui 
         return AF.make(af);
@@ -664,6 +662,9 @@ export default class AF {
     */
     toJson() {
         return this.toString("[,]", '","', "{,}");
+    }
+    toJSON() {
+        return this.toJson();
     }
 }
 AF.e = "";
