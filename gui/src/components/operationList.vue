@@ -1,8 +1,21 @@
 <template>
   <div>
+    <span class="d-block text-center h5">Closures</span>
     <b-button-group vertical>
       <operation
-        v-for="operation in operations"
+        v-for="operation in operations[0]"
+        :name="operation.name"
+        :key="operation.name"
+        :function="operation.function"
+        :args="operation.args"
+        :static="operation.static"
+        class="= my-2 rounded"
+      />
+    </b-button-group>
+    <span class="d-block text-center mt-4 h5">Convertions</span>
+    <b-button-group vertical>
+      <operation
+        v-for="operation in operations[1]"
         :name="operation.name"
         :key="operation.name"
         :function="operation.function"
@@ -27,48 +40,52 @@ export default {
       type: Array,
       required: false,
       default: () => [
-        {
-          name: "Cloture par Complementation",
-          function: "clotureComplementation",
-          static: true,
-          args: ["this"]
-        },
-        {
-          name: "Cloture par Etoile",
-          function: "clotureEtoile",
-          static: true,
-          args: ["this"]
-        },
-        {
-          name: "Cloture par Miroir",
-          function: "clotureMiroir",
-          static: true,
-          args: ["this"]
-        },
-        {
-          name: "Completer",
-          function: "complete",
-          static: false,
-          args: []
-        },
-        {
-          name: "To AFD",
-          function: "toAFD",
-          static: false,
-          args: []
-        },
-        {
-          name: "To AFN",
-          function: "toAFN",
-          static: false,
-          args: []
-        },
-        {
-          name: "To EAFN",
-          function: "toEAFN",
-          static: false,
-          args: []
-        }
+        [
+          {
+            name: "Complementary",
+            function: "clotureComplementation",
+            static: true,
+            args: ["this"]
+          },
+          {
+            name: "Iteration",
+            function: "clotureEtoile",
+            static: true,
+            args: ["this"]
+          },
+          {
+            name: "Miror",
+            function: "clotureMiroir",
+            static: true,
+            args: ["this"]
+          }
+        ],
+        [
+          {
+            name: "Complete",
+            function: "complete",
+            static: false,
+            args: []
+          },
+          {
+            name: "AFD",
+            function: "toAFD",
+            static: false,
+            args: []
+          },
+          {
+            name: "AFN",
+            function: "toAFN",
+            static: false,
+            args: []
+          },
+          {
+            name: "EAFN",
+            function: "toEAFN",
+            static: false,
+            args: []
+          }
+        ]
       ]
     }
   },

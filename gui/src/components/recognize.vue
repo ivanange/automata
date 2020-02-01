@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-form @submit="onSubmit">
+    <b-form @submit.prevent="work">
       <b-form-group>
         <b-form-input
           id="word"
@@ -33,6 +33,8 @@ export default {
     return {
       word: "",
       static: false,
+      found: null,
+      callerId: "recognize",
       file: [],
       text: [],
       delemiter: " "
@@ -48,24 +50,31 @@ export default {
   },
   computed: {
     color: function() {
-      return this.$root.found === null
+      return this.found === null
         ? "primary"
-        : this.$root.found === false
+        : this.found === false
         ? "danger"
         : "success";
     },
     message: function() {
       return {
-        static: this.static,
-        operation: "recognize",
-        args: [this.word]
+        operation: {
+          static: this.static,
+          name: "recognize"
+        },
+        args: [this.word],
+        callerId: this.callerId
       };
     }
   },
+  watch: {
+    "$root.af": function() {
+      this.found = null;
+    }
+  },
   methods: {
-    onSubmit(evt) {
-      evt.preventDefault();
-      this.$root.worker.postMessage(this.message);
+    work(evt) {
+      this.post(this.message);
     },
     get_file(f) {
       if (f) {

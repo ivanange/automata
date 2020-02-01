@@ -7,41 +7,42 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "../../dist/bootstrap";
 import * as vis from "vis-network";
-import AF from "../../dist/AF";
+import store from "./store";
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css';
+
+Vue.component('v-select', vSelect);
+
 Vue.use(BootstrapVue);
 Vue.config.productionTip = false;
 const worker = new Worker();
-//
 const vm = new Vue({
   router,
+  store,
   data: {
     worker: worker,
-    af: {
-      kind: ""
-    },
-    string: "",
-    found: null,
+    af: {},
+    regex: "",
+    message: null,
     modal: "HI"
   },
   mounted() {
-    let A = new AF(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
-      [1, "a", 1],
-      [1, "a", 2],
-      [2, "b", 3],
-      [2, "a", 4],
-      [3, "b", 3],
-      [3, "b", 4]
-    ]);
 
-    console.log(A);
-    this.visualization(A, "representation");
+
   },
   watch: {
+    message: function () {
+      this.handler()
+    },
     af(v) {
       this.visualization(v);
     }
   },
   methods: {
+    handler() {
+      let message = this.message;
+      this.$emit(message.callerId, message);
+    },
     getsvg() {
       var canvas = document.getElementById("canvas"),
         ctx = canvas.getContext("2d"),
@@ -58,14 +59,12 @@ const vm = new Vue({
     },
     visualization(auto, id = "representation") {
       let g = new Set(auto.states);
-      let h = [
-        {
-          id: -1,
-          label: "",
-          title: `state `,
-          color: "rgba(0,0,0,0)"
-        }
-      ];
+      let h = [{
+        id: -1,
+        label: "",
+        title: `state `,
+        color: "rgba(0,0,0,0)"
+      }];
       let t = [];
 
       for (let i of g.values()) {
@@ -121,10 +120,10 @@ const vm = new Vue({
         t.push({
           from: i[0],
           to: i[2],
-          selectionWidth: function(width) {
+          selectionWidth: function (width) {
             return width + 2;
           },
-          hoverWidth: function(width) {
+          hoverWidth: function (width) {
             return width + 1;
           },
           title: `transition from state ${i[0]} to state ${i[2]}`,
@@ -163,27 +162,13 @@ window.vm = vm;
 
 window.worker = worker;
 
-worker.onmessage = function(e) {
+worker.onmessage = function (e) {
   let data = e.data;
   console.log(data);
   if (data.status !== "ERROR") {
-    if (typeof data.data === "object") {
-      vm.$data.af = data.data;
-      worker.postMessage({
-        static: false,
-        operation: "toRegex",
-        args: []
-      });
-      vm.$data.found = null;
-    } else if (typeof data.data === "string") vm.$data.string = data.data;
-    else vm.$data.found = data.data;
+    vm.$data.message = data;
   } else {
     vm.$data.modal = "Error : " + data.data;
     vm.$bvModal.show("modal");
   }
-};
-
-/*
-      [1, a, 1],       [1, a, 2],       [2, b, 3],       [2, a, 4],       [3, b, 3],       [3, b, 4]
-
-*/
+}
