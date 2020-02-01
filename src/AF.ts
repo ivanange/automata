@@ -23,17 +23,23 @@ export default class AF {
     protected hasETransitions: Boolean;
     protected static i: number = 0;
     public kind: string;
+    public name: string;
 
 	/*
 	@param Q : states, Qi : initial state, F : final states, E : alphabet, S : transitions
 	return AF
 	*/
-    public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>) {
+    public constructor(Q: Set<any>, Qi: any, F: Set<any>, E: Set<string>, S: Array<transition>, name?: string) {
         // check there are no duplicate transitions
         // use switchcase to provide precise errors
-        let invalidSet = [...E].filter(el => [...E].filter(s => s.match(el)).length > 1) // verifie que aucun symbol n'est contenu dans un autres
+        let invalidSet = [...E].filter(
+            el => [...E].filter(
+                s => s.match(el.replace(/([\[\]\^\.\|\?\*\+\(\)\$])/g, "\\$1"))
+            ).length > 1
+        ); // verifie que aucun symbol n'est contenu dans un autres
 
 
+        if (!(Q.size && Qi != undefined && F.size && E.size && S.length)) throw "Unspecified properties, make sure you define every property (alphabet, states, initial satate, final states, transitions )";
         if (!Q.contains(Qi)) throw "Initial state not element of Q (set of all states)";
         else if (!Q.isSubset(F)) throw "Final states not subset of Q (set of all states)";
         else if (!E.isSubset(new Set(S.filter(e => e[1] != "").map(el => el[1])))) throw "A Symbol used in a transition does not exist in Sigma(alphabet)";
@@ -47,6 +53,7 @@ export default class AF {
             this.transitions = S;
             this.currentState = this.initialState;
             this.kind = this.type();
+            this.name = name;
         }
     }
 
@@ -213,17 +220,17 @@ export default class AF {
         return this.reset().analyze(this.slice(word), undefined, true);
     }
 
-    public fauxTruc(words: Array<string>, afs: Array<AF> ): Array<string>   {
-        let regexs = afs.reduce((acc, af ) => {
+    public static recognizeText(words: Array<string>, afs: Array<AF>): Array<string> {
+        let regexs = afs.reduce((acc, af) => {
             acc[af.name] = af.toRegex();
             return acc;
         }, {});
 
-       return words.map( word => {
+        return words.map(word => {
             let recognized;
-            for( let af of afs ) {
+            for (let af of afs) {
                 recognized = af.recognize(word);
-                if(recognized) {
+                if (recognized) {
                     return `<${word} : ${af.name} ( ${regexs[af.name]} )>`;
                 }
             }
@@ -231,10 +238,10 @@ export default class AF {
         })
 
 
-          
-        }
 
- 
+    }
+
+
 
 	/*
 		test if AF is an e-AFN
@@ -248,9 +255,14 @@ export default class AF {
 	*/
     public isComplete(): Boolean {
         // check if each state has as many different transitions as there are symbols in the alphabet
-        return [...this.states].filter(
-            el => this.transitions.filter(e => e[0] + "" == el + "").length < this.alphabet.size
-        ).length == 0;
+
+        for (let state of this.states) {
+            let symbols: Set<any> = new Set(this.transitions.filter(e => e[0] + "" == state + "").map(trans => trans[1]));
+            if ([...this.alphabet].filter(el => symbols.contains(el)).length != this.alphabet.size) {
+                return false;
+            }
+        }
+        return true;
     }
 
 	/*
@@ -638,16 +650,19 @@ export default class AF {
         return str;
     }
 
-    public static make(af: any): AF {
-        return new AF(af.states, af.initialState, af.finalStates, af.alphabet, af.transitions);
+    public static make({ states, initialState, finalStates, alphabet, transitions, name }: any): AF {
+        return new AF(states, initialState, finalStates, alphabet, transitions, name);
     }
 
 	/*
 	@param : regex : regular expression
 		convert  regular expression to AF
 	*/
-    public static fromRegex(regex: string): AF {
-        return AF.make(AF.parseRegex(AF.simplify(regex)));
+    public static fromRegex(regex: string, name?: string): AF {
+        return AF.make({
+            ...AF.parseRegex(AF.simplify(regex)),
+            name: name
+        });
     }
 
 	/*
@@ -768,41 +783,7 @@ export default class AF {
             transitions: af.transitions.concat([...af.finalStates].map(e => [e, AF.e, af.initialState]))
         });
     }
-    /*
-        public minimise(): AF {
-            if (!this.isDeterministic()) return this.determinise().minimise();
-            if (!this.isComplete()) return this.complete().minimise();
-    
-            let partitions: Set<Array<any>> = new Set([
-                new Set([...this.states].filter(el => !this.finalStates.contains(el))),
-                new Set([...this.finalStates])
-            ]);
-    
-            function test(parts: Set<Array<any>>) {
-                let af = {
-                    states: new Set(parts),
-                };
-                let destination;
-                for (let part in parts) {
-                    d = [];
-                    for (let [s1, s2] in part.zip(part)) {
-                        for (let symbol in this.alphabet) {
-                            d1 = this.transiter(symbol, s1);
-                            d2 = this.transiter(symbol, s2);
-    
-                            d.concat([d1, d2]);
-                            // construit u af a chaque appelle de test
-                            //if s1 and s2 on any symbol not in the same set 
-                            //mettre s2 dans le dans une nouvelle classe ( ajouter transitions ) et enlever le l'ancien
-    
-                        }
-                    }
-                }
-                // arriver ici on a fini on make(af)
-            }
-    
-        }
-    */
+
 	/*
 	returns type of the AF as string
 	*/
@@ -824,7 +805,9 @@ export default class AF {
                 ${ propsnotationA[0]}currentState${propsnotationA[1]} : ${typeof this.currentState == "object" ? this.currentState.toString(notation, propsnotation) : this.currentState},
                 ${ propsnotationA[0]}finalStates${propsnotationA[1]} : ${this.finalStates.toString(notation, propsnotation)} ,
                 ${ propsnotationA[0]}alphabet${propsnotationA[1]} : ${this.alphabet.toString(notation, propsnotation)},
-                ${ propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}
+                ${ propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)},
+                ${ propsnotationA[0]}kind${propsnotationA[1]} : "${this.kind + ""}",
+                ${ propsnotationA[0]}name${propsnotationA[1]} : "${this.name + ""}"
                 ${ encloseA[1]}
                 `;
     }
@@ -834,6 +817,10 @@ export default class AF {
 	*/
     public toJson(): string {
         return this.toString("[,]", '","', "{,}");
+    }
+
+    public toJSON(): string {
+        return this.toJson();
     }
 
     // arrayisEqual to match any depth

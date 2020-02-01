@@ -20,7 +20,7 @@
       </div>
       <div class="m-2">
         <label>Regular expression :</label>
-        <b-form-input :value="this.$root.string" readonly type="text" size="sm"></b-form-input>
+        <b-form-input :value="this.$root.regex" readonly type="text" size="sm"></b-form-input>
       </div>
       <div class="m-2">
         <label>Type :</label>
