@@ -751,7 +751,7 @@ export default class AF {
             if (!this.isComplete()) return this.complete().minimise();
     
             let partitions: Set<Array<any>> = new Set([
-                new Set([...this.states].filter(el => !this.finalStates.contains(el))),
+                 new Set([...this.states].filter(el => !this.finalStates.contains(el))),
                 new Set([...this.finalStates])
             ]);
     
