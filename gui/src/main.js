@@ -23,10 +23,7 @@ const vm = new Vue({
     found: null,
     modal: "HI"
   },
-  mounted() {
-    
-    
-  },
+  mounted() {},
   watch: {
     af(v) {
       this.visualization(v);
@@ -135,6 +132,7 @@ const vm = new Vue({
         edges: edges
       };
       var options = {
+        height: "500px",
         edges: {
           arrows: "to",
           color: "black"
