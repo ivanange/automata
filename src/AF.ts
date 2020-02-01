@@ -623,8 +623,8 @@ export default class AF {
         return str;
     }
 
-    public static make(af: any): AF {
-        return new AF(af.states, af.initialState, af.finalStates, af.alphabet, af.transitions);
+    public static make({ states, initialState, finalStates, alphabet, transitions, name } : any): AF {
+        return new AF(states, initialState, finalStates, alphabet, transitions, name);
     }
 
 	/*
@@ -753,41 +753,7 @@ export default class AF {
             transitions: af.transitions.concat([...af.finalStates].map(e => [e, AF.e, af.initialState]))
         });
     }
-    /*
-        public minimise(): AF {
-            if (!this.isDeterministic()) return this.determinise().minimise();
-            if (!this.isComplete()) return this.complete().minimise();
-    
-            let partitions: Set<Array<any>> = new Set([
-                new Set([...this.states].filter(el => !this.finalStates.contains(el))),
-                new Set([...this.finalStates])
-            ]);
-    
-            function test(parts: Set<Array<any>>) {
-                let af = {
-                    states: new Set(parts),
-                };
-                let destination;
-                for (let part in parts) {
-                    d = [];
-                    for (let [s1, s2] in part.zip(part)) {
-                        for (let symbol in this.alphabet) {
-                            d1 = this.transiter(symbol, s1);
-                            d2 = this.transiter(symbol, s2);
-    
-                            d.concat([d1, d2]);
-                            // construit u af a chaque appelle de test
-                            //if s1 and s2 on any symbol not in the same set 
-                            //mettre s2 dans le dans une nouvelle classe ( ajouter transitions ) et enlever le l'ancien
-    
-                        }
-                    }
-                }
-                // arriver ici on a fini on make(af)
-            }
-    
-        }
-    */
+
 	/*
 	returns type of the AF as string
 	*/
@@ -809,7 +775,9 @@ export default class AF {
                 ${ propsnotationA[0]}currentState${propsnotationA[1]} : ${typeof this.currentState == "object" ? this.currentState.toString(notation, propsnotation) : this.currentState},
                 ${ propsnotationA[0]}finalStates${propsnotationA[1]} : ${this.finalStates.toString(notation, propsnotation)} ,
                 ${ propsnotationA[0]}alphabet${propsnotationA[1]} : ${this.alphabet.toString(notation, propsnotation)},
-                ${ propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)}
+                ${ propsnotationA[0]}transitions${propsnotationA[1]} : ${this.transitions.toString(notation, propsnotation)},
+                ${ propsnotationA[0]}kind${propsnotationA[1]} : "${this.kind+""}",
+                ${ propsnotationA[0]}name${propsnotationA[1]} : "${this.name + ""}"
                 ${ encloseA[1]}
                 `;
     }

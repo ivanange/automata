@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-form @submit="onSubmit">
+    <b-form @submit.prevent="work">
       <b-form-group>
         <b-form-input
           id="word"
@@ -22,29 +22,41 @@ export default {
   data() {
     return {
       word: "",
-      static: false
+      static: false,
+      found: null,
+      callerId: "recognize"
     };
   },
   computed: {
     color: function() {
-      return this.$root.found === null
+      return this.found === null
         ? "primary"
-        : this.$root.found === false
+        : this.found === false
         ? "danger"
         : "success";
     },
     message: function() {
       return {
-        static: this.static,
-        operation: "recognize",
-        args: [this.word]
+        operation: {
+          static: this.static,
+          name: "recognize"
+        },
+        args: [this.word],
+        callerId: this.callerId
       };
     }
   },
+  watch: {
+    "$root.af": function() {
+      this.found = null;
+    }
+  },
   methods: {
-    onSubmit(evt) {
-      evt.preventDefault();
-      this.$root.worker.postMessage(this.message);
+    work(evt) {
+      this.post(this.message);
+    },
+    handler(message) {
+      this.found = message.data;
     }
   }
 };

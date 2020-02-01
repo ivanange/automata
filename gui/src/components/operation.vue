@@ -12,27 +12,25 @@ export default {
     args: Array
   },
   data() {
-    return {};
+    return {
+      callerId: this.name
+    };
   },
   computed: {
     message: function() {
       return {
-        static: this.static,
-        operation: this.function,
-        args: this.args || []
+        operation: {
+          static: this.static,
+          name: this.function
+        },
+        args: this.args || [],
+        callerId: this.callerId
       };
     }
   },
   methods: {
     run(evt) {
-      if(this.$root.af.currentState) {
-        this.$root.worker.postMessage(this.message);
-      }
-      else {
-            this.$data.modal = "Error : No Automaton has been defined";
-          this.$bvModal.show("modal");
-      }
-      
+      this.post(this.message);
     }
   }
 };

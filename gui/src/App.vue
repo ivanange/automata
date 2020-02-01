@@ -5,7 +5,7 @@
         <h3 class="d-inline">Home |</h3>
       </router-link>
       <router-link to="/about">
-        <h3 class="d-inline">| About</h3>
+        <h3 class="d-inline"> About</h3>
       </router-link>
     </div>
     <router-view />
