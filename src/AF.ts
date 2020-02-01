@@ -213,6 +213,29 @@ export default class AF {
         return this.reset().analyze(this.slice(word), undefined, true);
     }
 
+    public fauxTruc(words: Array<string>, afs: Array<AF> ): Array<string>   {
+        let regexs = afs.reduce((acc, af ) => {
+            acc[af.name] = af.toRegex();
+            return acc;
+        }, {});
+
+       return words.map( word => {
+            let recognized;
+            for( let af of afs ) {
+                recognized = af.recognize(word);
+                if(recognized) {
+                    return `<${word} : ${af.name} ( ${regexs[af.name]} )>`;
+                }
+            }
+            return `<${word} : unknown>`;
+        })
+
+
+          
+        }
+
+ 
+
 	/*
 		test if AF is an e-AFN
 	*/
