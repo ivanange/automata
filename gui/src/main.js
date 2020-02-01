@@ -7,7 +7,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import "../../dist/bootstrap";
 import * as vis from "vis-network";
-import AF from "../../dist/AF";
+
 Vue.use(BootstrapVue);
 Vue.config.productionTip = false;
 const worker = new Worker();
@@ -24,17 +24,8 @@ const vm = new Vue({
     modal: "HI"
   },
   mounted() {
-    let A = new AF(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
-      [1, "a", 1],
-      [1, "a", 2],
-      [2, "b", 3],
-      [2, "a", 4],
-      [3, "b", 3],
-      [3, "b", 4]
-    ]);
-
-    console.log(A);
-    this.visualization(A, "representation");
+    
+    
   },
   watch: {
     af(v) {
