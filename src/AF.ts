@@ -783,7 +783,6 @@ export default class AF {
             transitions: af.transitions.concat([...af.finalStates].map(e => [e, AF.e, af.initialState]))
         });
     }
-
 	/*
 	returns type of the AF as string
 	*/
@@ -823,17 +822,7 @@ export default class AF {
         return this.toJson();
     }
 
-    // arrayisEqual to match any depth
-    // closures
-    // minimisation
-    // multiple initial states
-    // simplify regex
-    // renameStates([new names]) : AF
-    // use jsdoc to generate documentation 
-    // edit properties : create new automata to materailize changes intstead of modifying
-    // B774756A0E
-
-
+   
 }
 
 
