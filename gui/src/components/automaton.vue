@@ -30,6 +30,7 @@
         :transitions="this.$root.af.transitions"
         :states="this.$root.af.states"
         class="w-75 my-3"
+        style="overflow: auto;"
       />
     </b-form>
   </div>
