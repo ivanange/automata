@@ -45,7 +45,15 @@
           placeholder="fichier"
         ></b-form-file>
       </b-form-group>
-
+      <b-form-group label="Word delimiter" class="text-left" v-if="advanced">
+        <b-form-input
+          id="delimiter"
+          v-model="delimiter"
+          type="text"
+          placeholder="delimiter"
+          style="width: 100px;"
+        ></b-form-input>
+      </b-form-group>
       <b-button type="submit" class="my-2" :variant="color">Recognize</b-button>
     </b-form>
 
@@ -72,7 +80,7 @@ export default {
       callerId: "recognize",
       file: [],
       text: [],
-      delemiter: " ",
+      delimiter: null,
       result: " ",
       advanced: false,
       automataList: []
@@ -80,9 +88,6 @@ export default {
   },
   watch: {
     file() {
-      this.get_file(this.file);
-    },
-    delemiter() {
       this.get_file(this.file);
     },
     "$root.af": function() {
@@ -122,7 +127,7 @@ export default {
     clean(text) {
       return text
         .replace(/\r\n|\n\r|\n|\r/gm, "")
-        .split(this.delemiter || " ")
+        .split(this.delimiter || " ")
         .filter(v => {
           if (v) {
             return v;
@@ -148,14 +153,14 @@ export default {
           name: "recognizeText"
         },
         args: [
-          this.word && this.found === null ? this.clean(this.word) : this.text,
+          this.word ? this.clean(this.word) : this.text,
           this.automataList
         ],
         callerId: "analyze",
         callback: {
           map: "fromJson",
           static: true,
-          excludeThis: false,
+          excludeThis: true,
           argIndex: 1
         }
       });

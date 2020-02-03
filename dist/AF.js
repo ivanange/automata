@@ -566,7 +566,19 @@ export default class AF {
             finalStates: new Set([...af.states].filter(e => !af.finalStates.has(e)))
         });
     }
-    static clotureEnsemble(afs, union = true) {
+    static clotureEnsemble(afs, union = true, mergeAlphabet = false) {
+        if (afs.filter(af => afs.filter(a => !a.alphabet.isSubset(af.alphabet)).length > 0).length > 0) {
+            if (!mergeAlphabet) {
+                throw "Automata should have the same alphabet";
+            }
+            else {
+                let alphabet = afs.reduce(((acc, af) => acc = (new Set()).pushArray([...af.alphabet, ...acc])), []);
+                afs = afs.map(af => AF.make({
+                    ...af,
+                    alphabet: alphabet
+                }).complete());
+            }
+        }
         return afs.map(el => el.toAFD().complete()).reduce((acc, af) => {
             let states = acc.states.zip(af.states);
             let alphabet = new Set([...acc.alphabet, ...af.alphabet]);
@@ -594,11 +606,11 @@ export default class AF {
             });
         });
     }
-    static clotureUnion(afs) {
-        return AF.clotureEnsemble(afs, true);
+    static clotureUnion(afs, mergeAlphabet = false) {
+        return AF.clotureEnsemble(afs, true, mergeAlphabet);
     }
-    static clotureIntersection(afs) {
-        return AF.clotureEnsemble(afs, false);
+    static clotureIntersection(afs, mergeAlphabet = false) {
+        return AF.clotureEnsemble(afs, false, mergeAlphabet);
     }
     static clotureMiroir(af) {
         if (af.finalStates.size > 1)

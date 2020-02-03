@@ -48,6 +48,12 @@
           class="mt-3"
         ></v-select>
       </b-form-group>
+      <b-form-checkbox
+        v-model="merge"
+        name="merge-button"
+        switch
+        class="mb-2 text-left"
+      >Merge alphabets</b-form-checkbox>
 
       <b-button type="submit" variant="primary" class="py-2 px-4 rounded-lg">Go</b-button>
     </b-form>
@@ -68,6 +74,7 @@ export default {
       automata: "",
       callerId: "closures",
       fromregex: true,
+      merge: false,
       automataList: []
     };
   },
@@ -91,19 +98,23 @@ export default {
         },
 
         args: this.fromregex
-          ? this.automata
-              .split(",")
-              .map(el => el.trim())
-              .filter(el => el !== "")
-          : this.automataList,
+          ? [
+              this.automata
+                .split(",")
+                .map(el => el.trim())
+                .filter(el => el !== ""),
+              this.merge
+            ]
+          : [this.automataList, this.merge],
 
         callback: {
           map: this.map,
           static: true,
-          excludeThis: true
+          excludeThis: true,
+          argIndex: 0
         },
         callerId: this.callerId,
-        spread: false
+        spread: true
       };
     }
   },

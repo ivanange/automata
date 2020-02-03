@@ -30,10 +30,11 @@ let G = new AF(new Set([1, 2, 3, 4, 5, 6, 7, 8]), 1, new Set([8]), new Set("ab")
 console.log(
     // F.minimise().toString(),
     // G.minimise().toString(),
-    AF.recognizeText(
-        ["if", "else", "cash", "while", "for", "let", "more", "$ta", "do", "$12ab"],
-        [AF.fromRegex("if+else+let+while+do", "keyword"), AF.fromRegex("$.(1+2+3+4+5+6+7+8+9+0+a+b+c+t+m+o+r+e)*", "variable")]
-    ),
+    // AF.recognizeText(
+    //     ["if", "else", "cash", "while", "for", "let", "more", "$ta", "do", "$12ab"],
+    //     [AF.fromRegex("if+else+let+while+do", "keyword"), AF.fromRegex("$.(1+2+3+4+5+6+7+8+9+0+a+b+c+t+m+o+r+e)*", "variable")]
+    // ),
+    AF.clotureUnion([AF.fromRegex("a.b"), AF.fromRegex("b.a"), AF.fromRegex("c*")], true)
 
 );
 

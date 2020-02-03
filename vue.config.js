@@ -2,6 +2,7 @@ const path = require("path");
 
 module.exports = {
   lintOnSave: false,
+  parallel: false,
   outputDir: "./gui/public",
   publicPath: "./",
   chainWebpack: config => {

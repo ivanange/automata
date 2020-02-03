@@ -91,17 +91,11 @@ const vm = new Vue({
             }
           }
         } else {
-          if (auto.initialState instanceof Set) {
-            if (auto.initialState.has(i)) {
-              lh.title = "initiale " + lh.title;
-              isInitial = true;
-            }
-          } else {
+
             if ("" + auto.initialState == i + "") {
               lh.title = "initiale " + lh.title;
               isInitial = true;
             }
-          }
         }
         if (isInitial) {
           t.push({

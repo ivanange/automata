@@ -288,10 +288,10 @@ export default class AF {
                 if (this.transiter(el, s).length == 0) af.transitions.push([s, el, pullState]);
             });
         });
-        this.alphabet.forEach( (el) => af.transitions.push([pullState, el, pullState]) );
+        this.alphabet.forEach((el) => af.transitions.push([pullState, el, pullState]));
         // creer un état puis avecc toutes les transition sortantes qui revienent
         // sur lui et les transition manquante qui vont sur lui 
-        return AF.make(af); 
+        return AF.make(af);
     }
 
     public determinise(): AF {
@@ -710,7 +710,19 @@ export default class AF {
         });
     }
 
-    public static clotureEnsemble(afs: Array<AF>, union = true): AF {
+    public static clotureEnsemble(afs: Array<AF>, union = true, mergeAlphabet = false): AF {
+        if (afs.filter(af => afs.filter(a => !a.alphabet.isSubset(af.alphabet)).length > 0).length > 0) {
+            if (!mergeAlphabet) {
+                throw "Automata should have the same alphabet";
+            }
+            else {
+                let alphabet = afs.reduce(((acc, af) => acc = (new Set()).pushArray([...af.alphabet, ...acc])), []);
+                afs = afs.map(af => AF.make({
+                    ...af,
+                    alphabet: alphabet
+                }).complete());
+            }
+        }
 
         return afs.map(el => el.toAFD().complete()).reduce((acc, af) => {
             let states = acc.states.zip(af.states);
@@ -744,12 +756,12 @@ export default class AF {
         });
     }
 
-    public static clotureUnion(afs: Array<AF>): AF {
-        return AF.clotureEnsemble(afs, true);
+    public static clotureUnion(afs: Array<AF>, mergeAlphabet = false): AF {
+        return AF.clotureEnsemble(afs, true, mergeAlphabet);
     }
 
-    public static clotureIntersection(afs: Array<AF>): AF {
-        return AF.clotureEnsemble(afs, false);
+    public static clotureIntersection(afs: Array<AF>, mergeAlphabet = false): AF {
+        return AF.clotureEnsemble(afs, false, mergeAlphabet);
     }
 
     public static clotureMiroir(af): AF {
@@ -822,7 +834,7 @@ export default class AF {
         return this.toJson();
     }
 
-   
+
 }
 
 

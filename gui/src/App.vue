@@ -4,8 +4,8 @@
       <b-navbar-brand to="/" class="pr-5 mr-5">Automata</b-navbar-brand>
       <b-navbar-nav class="ml-5 pl-5">
         <b-nav-item to="/">Home</b-nav-item>
-        <b-nav-item to="/aboutjs">Source JS file</b-nav-item>
-        <b-nav-item to="/aboutts">Source TS file</b-nav-item>
+        <b-nav-item to="/aboutjs">Source JS files</b-nav-item>
+        <b-nav-item to="/aboutts">Source TS files</b-nav-item>
         <b-nav-item to="/authors">Authors</b-nav-item>
       </b-navbar-nav>
     </b-navbar>
