@@ -83,7 +83,13 @@ export default {
             name: "EAFN",
             function: "toEAFN",
             static: false,
-            args: []
+            args: [] 
+          },
+          {
+            name: "Minimise",
+            function: "minimise",
+            static: false,
+            args: [] 
           }
         ]
       ]
