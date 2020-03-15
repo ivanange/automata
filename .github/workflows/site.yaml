@@ -11,12 +11,13 @@ jobs:
     - name: get repo
       uses: actions/checkout@v2
 
-    - name: install needed packages and build 
+    - name: setup node 
       uses: actions/setup-node@v1
       with:
         node-version: 12.6
-      run:  cd ${{ github.workspace }}
-            npm install --save-dev --ignore-scripts install-peers
+
+    - name: install needed packages and build 
+      run:  npm install --save-dev --ignore-scripts install-peers
             npm i
             npm run build --if-present
 
