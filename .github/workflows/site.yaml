@@ -11,22 +11,22 @@ jobs:
     - name: get repo
       uses: actions/checkout@v2
 
-    - name: setup node 
+    - name: setup node to install needed packages and build 
       uses: actions/setup-node@v1
       with:
         node-version: 12.6
+      run:  |
+            npm install --save-dev --ignore-scripts install-peers
+            npm i
+            npm run build --if-present
 
-    - name: install needed packages and build 
-    - run:  npm install --save-dev --ignore-scripts install-peers
-    - run:  npm i
-    - run:  npm run build --if-present
-
-    - name: copy files
+    - name: copy files to docs folder
       run: yes | cp -af ${{ github.workspace }}/gui/public/* ${{ github.workspace }}/docs
 
     - name: push changes to production
-    - run: git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORYgit"
-    - run: git pull github ${GITHUB_REF}
-    - run: git add -A
-    - run: git commit -m "pushed to production"
-    - run: git push github HEAD:${GITHUB_REF}
+      run: | 
+            git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORYgit"
+            git pull github ${GITHUB_REF}
+            git add -A
+            git commit -m "pushed to production"
+            git push github HEAD:${GITHUB_REF}
