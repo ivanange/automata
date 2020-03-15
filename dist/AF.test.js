@@ -11,8 +11,8 @@ try {
     // A.analyze("abbaaaabbbbababaababbba".split(""))
     A.isDeterministic(), A.isComplete());
     //AFN 
-    let B = new AF(new Set([1, 2, 3, 4]), 1, new Set([4]), new Set("ab"), [
-        [1, "a", 1], [1, "a", 2], [2, "b", 3], [2, "a", 4], [3, "b", 3], [3, "b", 4]
+    let B = new AF(new Set(["x1", "x2", "x3", "x4"]), "x1", new Set(["x4"]), new Set("ab"), [
+        ["x1", "a", "x1"], ["x1", "a", "x2"], ["x2", "b", "x3"], ["x2", "a", "x4"], ["x3", "b", "x3"], ["x3", "b", "x4"]
     ]);
     let s = "aa";
     // B.analyze("ab".split(""))

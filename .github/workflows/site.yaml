@@ -10,6 +10,19 @@ jobs:
     steps:
     - name: get repo
       uses: actions/checkout@v1
-       
+
+    - name: install needed packages and build 
+      run:  cd ${{ github.workspace }}
+            npm install --save-dev --ignore-scripts install-peers
+            npm i
+            npm run build
+
     - name: copy files
       run: yes | cp -af ${{ github.workspace }}/gui/public/* ${{ github.workspace }}/docs
+
+    - name: push changes to production
+      run: git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORYgit"
+           git pull github ${GITHUB_REF} --ff-only
+           git add -A
+           git commit -m "pushed to production"
+           git push github HEAD:${GITHUB_REF}

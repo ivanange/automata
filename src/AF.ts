@@ -520,7 +520,9 @@ export default class AF {
     }
 
     public static parseJson(json: string): AFProps {
+        
         let object = JSON.parse(json);
+        console.log(object);
         object.states = object.states.toSet();
         object.alphabet = object.alphabet.toSet();
         object.initialState = object.initialState instanceof Array ? object.initialState.toSet() : object.initialState;
@@ -778,7 +780,7 @@ export default class AF {
         return AF.make(afs.reduce((acc, af) => {
             if ([...acc.states].filter(el => af.states.contains(el)).length > 0) throw "Automaton state are not disjoint";
             else if (acc.finalStates.size > 1) throw "Automaton has more than 1 final state";
-            else if (acc.transitions.filter(e => acc.finalStates.contains(e[0])).length > 0) "Automatons final state degree is not nul (has putgoing transitions)";
+            else if (acc.transitions.filter(e => acc.finalStates.contains(e[0])).length > 0) throw "Automatons final state degree is not nul (has putgoing transitions)";
             return acc = {
                 ...acc,
                 alphabet: new Set([...acc.alphabet, ...af.alphabet]),
@@ -827,11 +829,7 @@ export default class AF {
 	convert AF to json string
 	*/
     public toJson(): string {
-        return this.toString("[,]", '","', "{,}");
-    }
-
-    public toJSON(): string {
-        return this.toJson();
+        return JSON.stringify(this);
     }
 
 

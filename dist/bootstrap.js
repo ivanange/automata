@@ -45,6 +45,9 @@ Set.prototype.toString = function (notation = "{,}", wrapper = ",") {
 Set.prototype.zip = function (set, callback) {
     return new Set([...this].zip([...set], callback));
 };
+Set.prototype.toJSON = function () {
+    return [...this];
+};
 Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
     wrapper = wrapper.split(",");
     wrapper[1] = wrapper[1] || wrapper[0];

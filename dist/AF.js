@@ -408,6 +408,7 @@ export default class AF {
     }
     static parseJson(json) {
         let object = JSON.parse(json);
+        console.log(object);
         object.states = object.states.toSet();
         object.alphabet = object.alphabet.toSet();
         object.initialState = object.initialState instanceof Array ? object.initialState.toSet() : object.initialState;
@@ -629,7 +630,7 @@ export default class AF {
             else if (acc.finalStates.size > 1)
                 throw "Automaton has more than 1 final state";
             else if (acc.transitions.filter(e => acc.finalStates.contains(e[0])).length > 0)
-                "Automatons final state degree is not nul (has putgoing transitions)";
+                throw "Automatons final state degree is not nul (has putgoing transitions)";
             return acc = {
                 ...acc,
                 alphabet: new Set([...acc.alphabet, ...af.alphabet]),
@@ -673,10 +674,7 @@ export default class AF {
     convert AF to json string
     */
     toJson() {
-        return this.toString("[,]", '","', "{,}");
-    }
-    toJSON() {
-        return this.toJson();
+        return JSON.stringify(this);
     }
 }
 AF.e = "";

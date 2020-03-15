@@ -9,6 +9,7 @@ declare interface Set<T> {
     pushArray(array: Array<any>): Set<T>;
     intersect(set: Set<T>): Set<T>;
     zip(set: Set<T>, callback?: Function): Set<T>;
+    toJSON(): ;
 }
 
 declare interface Array<T> {
@@ -81,6 +82,10 @@ Set.prototype.zip = function (set, callback) {
     return new Set(
         [...this].zip([...set], callback)
     );
+}
+
+Set.prototype.toJSON = function () {
+    return [...this] ;
 }
 
 Array.prototype.stringify = function (notation = "{,}", wrapper = ',') {
