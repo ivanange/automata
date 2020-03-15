@@ -11,10 +11,12 @@ jobs:
     - name: get repo
       uses: actions/checkout@v2
 
-    - name: setup node to install needed packages and build 
+    - name: setup node 
       uses: actions/setup-node@v1
       with:
         node-version: 12.6
+
+    - name: install needed packages and build 
       run:  |
             npm install --save-dev --ignore-scripts install-peers
             npm i
