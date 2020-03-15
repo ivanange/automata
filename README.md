@@ -11,4 +11,6 @@ Tool to play around with automata concepts, with support for new working  enviro
 -- npm run serve to start dev server when working on UI ( made with love with Vue.js )
 -- npm run build to generate a production build
 
-note tool uses a worker to isolate computation from UI, with a little  API built on top of worker messages for communication with UI.
+[live demo here](https://ivanange.github.io/automata/)
+
+**Note** : tool uses a worker to isolate computation from UI, with a little  API built on top of worker messages for communication with UI.
