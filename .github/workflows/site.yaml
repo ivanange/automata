@@ -9,13 +9,16 @@ jobs:
     name: build site
     steps:
     - name: get repo
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - name: install needed packages and build 
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.6
       run:  cd ${{ github.workspace }}
             npm install --save-dev --ignore-scripts install-peers
             npm i
-            npm run build
+            npm run build --if-present
 
     - name: copy files
       run: yes | cp -af ${{ github.workspace }}/gui/public/* ${{ github.workspace }}/docs
