@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     name: build site
     steps:
+    - uses: actions/checkout@master
     - name: get repo
       uses: actions/checkout@v2
 
@@ -25,10 +26,13 @@ jobs:
     - name: copy files to docs folder
       run: yes | cp -af ${{ github.workspace }}/gui/public/* ${{ github.workspace }}/docs
 
+    - name: commit changes
+      run: |
+        git config --local user.email "ivanangethe1@gmail.com"
+        git config --local user.name "ivanange"
+        git add -A
+        git commit -m "pushing to production" -a
     - name: push changes to production
-      run: | 
-            git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORYgit"
-            git pull github ${GITHUB_REF}
-            git add -A
-            git commit -m "pushed to production"
-            git push github HEAD:${GITHUB_REF}
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
