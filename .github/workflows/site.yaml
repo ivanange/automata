@@ -26,7 +26,7 @@ jobs:
 
     - name: push changes to production
       run: git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORYgit"
-           git pull github ${GITHUB_REF} --ff-only
+           git pull github ${GITHUB_REF}
            git add -A
            git commit -m "pushed to production"
            git push github HEAD:${GITHUB_REF}
